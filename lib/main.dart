@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:vnote/UI/screens/splash_screen/splash_screen.dart';
+import 'package:vnote/core/theme/theme_provider.dart';
+import 'package:vnote/core/theme/app_theme.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize theme provider and load saved preference
+  final themeProvider = ThemeProvider();
+  await themeProvider.initialize();
+
+  runApp(
+    ChangeNotifierProvider.value(value: themeProvider, child: const MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -10,11 +21,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'VNote',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.brown),
-      home: const SplashScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'VNote',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }

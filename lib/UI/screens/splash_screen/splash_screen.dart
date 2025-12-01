@@ -1,7 +1,7 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:vnote/UI/screens/home_screen/home_screen.dart';
+import 'package:vnote/UI/screens/onboarding_screens/onboarding_screens.dart';
 import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_strings.dart';
 import 'package:vnote/core/constants/app_typography.dart';
@@ -11,8 +11,12 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      decoration: const BoxDecoration(color: Colors.black),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+      ),
       child: AnimatedSplashScreen(
         splash: Column(
           mainAxisSize: MainAxisSize.min,
@@ -21,14 +25,14 @@ class SplashScreen extends StatelessWidget {
             SizedBox(
               height: 200,
               child: LottieBuilder.asset(
-                "assets/splash_screen/mic.json",
+                "assets/splash_screen/voice.json",
                 delegates: LottieDelegates(
                   values: [
-                    ValueDelegate.color(['**'], value: AppColors.primaryRed),
+                    ValueDelegate.color(['**'], value: AppColors.red),
                     ValueDelegate.color([
                       'mic Outlines',
                       '**',
-                    ], value: AppColors.lightSurface),
+                    ], value: isDark ? AppColors.darkestGray : AppColors.white),
                   ],
                 ),
               ),
@@ -40,21 +44,21 @@ class SplashScreen extends StatelessWidget {
                   AppStrings.appFirstName,
                   style: TextStyle(
                     fontSize: AppTypography.size48,
-                    color: AppColors.primaryRed,
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: AppTypography.bold,
                   ),
                 ),
+                const SizedBox(width: 4),
                 Text(
                   AppStrings.appSecondName,
                   style: TextStyle(
                     fontSize: AppTypography.size40,
-                    color: AppColors.lightSurface,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: AppTypography.bold,
                   ),
                 ),
               ],
             ),
-
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: 1),
               duration: const Duration(seconds: 2),
@@ -64,15 +68,15 @@ class SplashScreen extends StatelessWidget {
               child: Text(
                 AppStrings.appTagline,
                 style: TextStyle(
-                  fontSize: AppTypography.size20,
+                  fontSize: AppTypography.size18,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.lightSurface,
+                  color: Theme.of(context).textTheme.bodyMedium!.color,
                 ),
               ),
             ),
           ],
         ),
-        nextScreen: const HomeScreen(),
+        nextScreen: const OnBoardingScreen(),
         splashIconSize: 400,
         backgroundColor: Colors.transparent,
       ),
