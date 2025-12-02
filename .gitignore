@@ -48,3 +48,4 @@ app.*.map.json
 assets/google_credentials.json
 **/google_credentials.json
 *.json.encrypted
+lib/core/config/app_config.dart

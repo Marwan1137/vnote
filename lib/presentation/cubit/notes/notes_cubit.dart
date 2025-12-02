@@ -1,20 +1,35 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:vnote/domain/entities/note.dart';
-import 'package:vnote/domain/repositories/notes_repository.dart';
+import 'package:vnote/domain/usecases/create_note_usecase.dart';
+import 'package:vnote/domain/usecases/delete_note_usecase.dart';
+import 'package:vnote/domain/usecases/get_all_notes_usecase.dart';
+import 'package:vnote/domain/usecases/search_notes_usecase.dart';
+import 'package:vnote/domain/usecases/update_note_usecase.dart';
+import 'package:vnote/domain/usecases/usecase.dart';
 import 'notes_state.dart';
 
 @injectable
 class NotesCubit extends Cubit<NotesState> {
-  final NotesRepository repository;
+  final GetAllNotesUseCase getAllNotesUseCase;
+  final SearchNotesUseCase searchNotesUseCase;
+  final CreateNoteUseCase createNoteUseCase;
+  final UpdateNoteUseCase updateNoteUseCase;
+  final DeleteNoteUseCase deleteNoteUseCase;
 
-  NotesCubit(this.repository) : super(NotesInitial());
+  NotesCubit(
+    this.getAllNotesUseCase,
+    this.searchNotesUseCase,
+    this.createNoteUseCase,
+    this.updateNoteUseCase,
+    this.deleteNoteUseCase,
+  ) : super(NotesInitial());
 
   // Load all notes
   Future<void> loadNotes() async {
     emit(NotesLoading());
 
-    final result = await repository.getAllNotes();
+    final result = await getAllNotesUseCase(const NoParams());
 
     result.fold((failure) => emit(NotesError(failure.message)), (notes) {
       if (notes.isEmpty) {
@@ -35,7 +50,7 @@ class NotesCubit extends Cubit<NotesState> {
       return;
     }
 
-    final result = await repository.searchNotes(query);
+    final result = await searchNotesUseCase(SearchNotesParams(query));
 
     result.fold((failure) => emit(NotesError(failure.message)), (
       searchResults,
@@ -90,7 +105,7 @@ class NotesCubit extends Cubit<NotesState> {
     final currentState = state;
     if (currentState is! NotesLoaded) return;
 
-    final result = await repository.deleteNote(id);
+    final result = await deleteNoteUseCase(DeleteNoteParams(id));
 
     result.fold(
       (failure) => emit(NotesError(failure.message)),
@@ -105,7 +120,7 @@ class NotesCubit extends Cubit<NotesState> {
       updatedAt: DateTime.now(),
     );
 
-    final result = await repository.updateNote(updatedNote);
+    final result = await updateNoteUseCase(UpdateNoteParams(updatedNote));
 
     result.fold(
       (failure) => emit(NotesError(failure.message)),
@@ -120,7 +135,7 @@ class NotesCubit extends Cubit<NotesState> {
 
   // Create note
   Future<void> createNote(Note note) async {
-    final result = await repository.createNote(note);
+    final result = await createNoteUseCase(CreateNoteParams(note));
 
     result.fold(
       (failure) => emit(NotesError(failure.message)),
@@ -130,7 +145,7 @@ class NotesCubit extends Cubit<NotesState> {
 
   // Update note
   Future<void> updateNote(Note note) async {
-    final result = await repository.updateNote(note);
+    final result = await updateNoteUseCase(UpdateNoteParams(note));
 
     result.fold(
       (failure) => emit(NotesError(failure.message)),

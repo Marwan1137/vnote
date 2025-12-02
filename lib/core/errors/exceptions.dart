@@ -78,9 +78,9 @@ class ModelNotFoundException implements Exception {
   String toString() => message;
 }
 
-class OllamaConnectionException implements Exception {
+class GeminiAPIException implements Exception {
   final String message;
-  OllamaConnectionException([this.message = 'Cannot connect to Ollama']);
+  GeminiAPIException([this.message = 'Gemini API error']);
 
   @override
   String toString() => message;

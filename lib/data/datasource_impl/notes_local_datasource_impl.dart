@@ -2,16 +2,7 @@ import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
 import '../../core/errors/exceptions.dart';
 import '../models/note_model.dart';
-
-abstract class NotesLocalDataSource {
-  Future<List<NoteModel>> getAllNotes();
-  Future<NoteModel> getNoteById(String id);
-  Future<NoteModel> createNote(NoteModel note);
-  Future<NoteModel> updateNote(NoteModel note);
-  Future<void> deleteNote(String id);
-  Future<List<NoteModel>> searchNotes(String query);
-  Future<List<NoteModel>> getFavoriteNotes();
-}
+import '../datasources_contracts/notes_local_datasource.dart';
 
 @LazySingleton(as: NotesLocalDataSource)
 class NotesLocalDataSourceImpl implements NotesLocalDataSource {

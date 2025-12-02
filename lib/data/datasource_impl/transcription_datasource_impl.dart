@@ -1,22 +1,14 @@
 import 'package:injectable/injectable.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../core/errors/exceptions.dart';
-import 'google_speech_service.dart';
-
-abstract class TranscriptionDataSource {
-  Future<String> transcribeAudio(
-    String audioPath, {
-    String? languageCode,
-    List<String>? alternativeLanguageCodes,
-  });
-  Future<bool> initialize();
-  Future<List<stt.LocaleName>> getAvailableLanguages();
-}
+import '../datasources_contracts/google_speech_service.dart';
+import 'google_speech_service_impl.dart';
+import '../datasources_contracts/transcription_datasource.dart';
 
 @LazySingleton(as: TranscriptionDataSource)
 class TranscriptionDataSourceImpl implements TranscriptionDataSource {
   final stt.SpeechToText _speechToText = stt.SpeechToText();
-  final GoogleSpeechService _googleSpeechService = GoogleSpeechService();
+  final GoogleSpeechService _googleSpeechService = GoogleSpeechServiceImpl();
   bool _isInitialized = false;
 
   @override
@@ -24,10 +16,8 @@ class TranscriptionDataSourceImpl implements TranscriptionDataSource {
     if (_isInitialized) return true;
 
     try {
-      // Initialize Google Speech-to-Text service
       await _googleSpeechService.initialize();
 
-      // Also initialize speech_to_text for language detection (if needed)
       final available = await _speechToText.initialize(
         onError: (error) {
           // Log error but don't throw - we're using Google API for transcription
@@ -57,30 +47,26 @@ class TranscriptionDataSourceImpl implements TranscriptionDataSource {
         await initialize();
       }
 
-      // Use Google Speech-to-Text API for file transcription
-      // If no language is specified, Google will auto-detect the language
-      // You can also provide alternativeLanguageCodes for better multi-language support
       final transcription = await _googleSpeechService.transcribeAudio(
         audioPath,
         languageCode: languageCode,
         alternativeLanguageCodes:
             alternativeLanguageCodes ??
             [
-              // Common languages for better auto-detection
-              'en-US', // English
-              'ar-EG', // Arabic
-              'fr-FR', // French
-              'es-ES', // Spanish
-              'de-DE', // German
-              'it-IT', // Italian
-              'pt-BR', // Portuguese
-              'ru-RU', // Russian
-              'ja-JP', // Japanese
-              'zh-CN', // Chinese (Simplified)
-              'ko-KR', // Korean
-              'hi-IN', // Hindi
+              'en-US',
+              'ar-EG',
+              'fr-FR',
+              'es-ES',
+              'de-DE',
+              'it-IT',
+              'pt-BR',
+              'ru-RU',
+              'ja-JP',
+              'zh-CN',
+              'ko-KR',
+              'hi-IN',
             ],
-        sampleRateHertz: 44100, // Match the recording sample rate
+        sampleRateHertz: 44100,
       );
 
       if (transcription.isEmpty) {

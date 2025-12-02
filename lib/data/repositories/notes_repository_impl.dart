@@ -4,7 +4,7 @@ import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
 import '../../domain/entities/note.dart';
 import '../../domain/repositories/notes_repository.dart';
-import '../datasources/notes_local_datasource.dart';
+import '../datasources_contracts/notes_local_datasource.dart';
 import '../models/note_model.dart';
 
 @LazySingleton(as: NotesRepository)

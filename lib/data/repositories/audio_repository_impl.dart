@@ -6,20 +6,20 @@ import '../../core/errors/failures.dart';
 import '../../domain/entities/processed_note.dart';
 import '../../domain/entities/recording.dart';
 import '../../domain/repositories/audio_repository.dart';
-import '../datasources/audio_local_datasource.dart';
-import '../datasources/ollama_datasource.dart';
-import '../datasources/transcription_datasource.dart';
+import '../datasources_contracts/audio_local_datasource.dart';
+import '../datasources_contracts/llm_datasource.dart';
+import '../datasources_contracts/transcription_datasource.dart';
 
 @LazySingleton(as: AudioRepository)
 class AudioRepositoryImpl implements AudioRepository {
   final AudioLocalDataSource audioDataSource;
   final TranscriptionDataSource transcriptionDataSource;
-  final OllamaDataSource ollamaDataSource;
+  final LLMDataSource llmDataSource;
 
   AudioRepositoryImpl(
     this.audioDataSource,
     this.transcriptionDataSource,
-    this.ollamaDataSource,
+    this.llmDataSource,
   );
 
   @override
@@ -91,14 +91,12 @@ class AudioRepositoryImpl implements AudioRepository {
     String transcription,
   ) async {
     try {
-      final processedNote = await ollamaDataSource.processTranscription(
+      final processedNote = await llmDataSource.processTranscription(
         transcription,
       );
       return Right(processedNote);
     } on LLMProcessingException catch (e) {
       return Left(LLMProcessingFailure(e.message));
-    } on OllamaConnectionException catch (e) {
-      return Left(OllamaConnectionFailure(e.message));
     } catch (e) {
       return Left(LLMProcessingFailure('Unexpected error: $e'));
     }

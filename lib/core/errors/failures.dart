@@ -59,8 +59,8 @@ class ModelNotFoundFailure extends Failure {
   const ModelNotFoundFailure([super.message = 'AI model not found']);
 }
 
-class OllamaConnectionFailure extends Failure {
-  const OllamaConnectionFailure([super.message = 'Cannot connect to Ollama']);
+class GeminiAPIFailure extends Failure {
+  const GeminiAPIFailure([super.message = 'Gemini API error']);
 }
 
 // Note failures

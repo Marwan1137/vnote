@@ -4,23 +4,45 @@ import 'package:injectable/injectable.dart';
 import '../../../domain/entities/note.dart';
 import '../../../domain/entities/processed_note.dart';
 import '../../../domain/entities/recording.dart';
-import '../../../domain/repositories/audio_repository.dart';
-import '../../../domain/repositories/notes_repository.dart';
+import '../../../domain/usecases/check_microphone_permission_usecase.dart';
+import '../../../domain/usecases/create_note_usecase.dart';
+import '../../../domain/usecases/open_app_settings_usecase.dart';
+import '../../../domain/usecases/process_transcription_usecase.dart';
+import '../../../domain/usecases/request_microphone_permission_usecase.dart';
+import '../../../domain/usecases/start_recording_usecase.dart';
+import '../../../domain/usecases/stop_recording_usecase.dart';
+import '../../../domain/usecases/transcribe_audio_params.dart';
+import '../../../domain/usecases/transcribe_audio_usecase.dart';
+import '../../../domain/usecases/usecase.dart';
 import 'recording_state.dart';
 
 @injectable
 class RecordingCubit extends Cubit<RecordingState> {
-  final AudioRepository audioRepository;
-  final NotesRepository notesRepository;
+  final CheckMicrophonePermissionUseCase checkMicrophonePermissionUseCase;
+  final RequestMicrophonePermissionUseCase requestMicrophonePermissionUseCase;
+  final StartRecordingUseCase startRecordingUseCase;
+  final StopRecordingUseCase stopRecordingUseCase;
+  final TranscribeAudioUseCase transcribeAudioUseCase;
+  final ProcessTranscriptionUseCase processTranscriptionUseCase;
+  final CreateNoteUseCase createNoteUseCase;
+  final OpenAppSettingsUseCase openAppSettingsUseCase;
   Timer? _durationTimer;
   DateTime? _recordingStartTime;
   String? _currentRecordingPath;
 
-  RecordingCubit(this.audioRepository, this.notesRepository)
-    : super(RecordingInitial());
+  RecordingCubit(
+    this.checkMicrophonePermissionUseCase,
+    this.requestMicrophonePermissionUseCase,
+    this.startRecordingUseCase,
+    this.stopRecordingUseCase,
+    this.transcribeAudioUseCase,
+    this.processTranscriptionUseCase,
+    this.createNoteUseCase,
+    this.openAppSettingsUseCase,
+  ) : super(RecordingInitial());
 
   Future<void> checkPermission() async {
-    final result = await audioRepository.checkMicrophonePermission();
+    final result = await checkMicrophonePermissionUseCase(const NoParams());
     result.fold((failure) => emit(RecordingPermissionDenied(failure.message)), (
       hasPermission,
     ) {
@@ -34,7 +56,7 @@ class RecordingCubit extends Cubit<RecordingState> {
 
   Future<void> requestPermission() async {
     emit(RecordingPermissionRequested());
-    final result = await audioRepository.requestMicrophonePermission();
+    final result = await requestMicrophonePermissionUseCase(const NoParams());
     result.fold((failure) => emit(RecordingPermissionDenied(failure.message)), (
       granted,
     ) {
@@ -48,7 +70,9 @@ class RecordingCubit extends Cubit<RecordingState> {
 
   Future<void> startRecording() async {
     // Check permission first
-    final permissionResult = await audioRepository.checkMicrophonePermission();
+    final permissionResult = await checkMicrophonePermissionUseCase(
+      const NoParams(),
+    );
     bool hasPermission = false;
     permissionResult.fold(
       (failure) => null,
@@ -57,7 +81,9 @@ class RecordingCubit extends Cubit<RecordingState> {
 
     if (!hasPermission) {
       await requestPermission();
-      final checkAgain = await audioRepository.checkMicrophonePermission();
+      final checkAgain = await checkMicrophonePermissionUseCase(
+        const NoParams(),
+      );
       checkAgain.fold((failure) => null, (granted) => hasPermission = granted);
       if (!hasPermission) {
         emit(
@@ -69,7 +95,7 @@ class RecordingCubit extends Cubit<RecordingState> {
       }
     }
 
-    final result = await audioRepository.startRecording();
+    final result = await startRecordingUseCase(const NoParams());
     result.fold((failure) => emit(RecordingError(failure.message)), (path) {
       _currentRecordingPath = path;
       _recordingStartTime = DateTime.now();
@@ -97,7 +123,9 @@ class RecordingCubit extends Cubit<RecordingState> {
       return;
     }
 
-    final result = await audioRepository.stopRecording(_currentRecordingPath!);
+    final result = await stopRecordingUseCase(
+      StopRecordingParams(_currentRecordingPath!),
+    );
     result.fold((failure) => emit(RecordingError(failure.message)), (
       recording,
     ) {
@@ -115,7 +143,7 @@ class RecordingCubit extends Cubit<RecordingState> {
 
     if (_currentRecordingPath != null) {
       // Cancel and delete the recording
-      await audioRepository.startRecording(); // This will handle cleanup
+      await startRecordingUseCase(const NoParams()); // This will handle cleanup
       _currentRecordingPath = null;
     }
 
@@ -126,8 +154,8 @@ class RecordingCubit extends Cubit<RecordingState> {
     emit(RecordingTranscribing(recording));
 
     // Transcribe audio
-    final transcriptionResult = await audioRepository.transcribeAudio(
-      recording.audioPath,
+    final transcriptionResult = await transcribeAudioUseCase(
+      TranscribeAudioParams(audioPath: recording.audioPath),
     );
 
     transcriptionResult.fold(
@@ -144,14 +172,15 @@ class RecordingCubit extends Cubit<RecordingState> {
         emit(RecordingProcessing(recording, transcription));
 
         // Process with AI
-        final processingResult = await audioRepository.processTranscription(
-          transcription,
+        final processingResult = await processTranscriptionUseCase(
+          ProcessTranscriptionParams(transcription),
         );
 
         processingResult.fold(
           (failure) {
             // If AI processing fails, create a fallback ProcessedNote
             // Still show format selection screen so user can choose format
+
             final fallbackNote = ProcessedNote(
               title: _extractTitleFromTranscription(transcription),
               content: transcription,
@@ -167,6 +196,7 @@ class RecordingCubit extends Cubit<RecordingState> {
           },
           (processedNote) {
             // Show format selection screen with AI-processed note
+
             emit(
               RecordingFormatSelection(recording, transcription, processedNote),
             );
@@ -188,7 +218,7 @@ class RecordingCubit extends Cubit<RecordingState> {
       wordCount: transcription?.split(RegExp(r'\s+')).length ?? 0,
     );
 
-    final result = await notesRepository.createNote(note);
+    final result = await createNoteUseCase(CreateNoteParams(note));
     result.fold(
       (failure) => emit(RecordingError(failure.message)),
       (_) => emit(RecordingProcessed(recording, _createBasicProcessedNote())),
@@ -376,7 +406,7 @@ class RecordingCubit extends Cubit<RecordingState> {
       wordCount: content.split(RegExp(r'\s+')).length,
     );
 
-    final result = await notesRepository.createNote(note);
+    final result = await createNoteUseCase(CreateNoteParams(note));
     result.fold(
       (failure) => emit(RecordingError(failure.message)),
       (_) => emit(RecordingProcessed(recording, processedNote)),
@@ -384,7 +414,7 @@ class RecordingCubit extends Cubit<RecordingState> {
   }
 
   Future<void> openAppSettings() async {
-    final result = await audioRepository.openAppSettings();
+    final result = await openAppSettingsUseCase(const NoParams());
     result.fold((failure) => emit(RecordingError(failure.message)), (_) {
       // After opening settings, check permission again when user returns
       // This will be handled by checking permission when screen is resumed
