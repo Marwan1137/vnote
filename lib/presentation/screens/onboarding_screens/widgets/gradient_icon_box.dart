@@ -30,9 +30,9 @@ class GradientIconBox extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: gradientColors.last.withOpacity(0.4),
+            color: gradientColors.last.withValues(alpha: 0.4),
             blurRadius: 12,
-            offset: Offset(0, 6),
+            offset: const Offset(0, 6),
           ),
         ],
       ),

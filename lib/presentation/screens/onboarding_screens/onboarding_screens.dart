@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:vnote/UI/screens/home_screen/home_screen.dart';
-import 'package:vnote/UI/screens/onboarding_screens/widgets/gradient_icon_box.dart';
+import 'package:vnote/presentation/screens/home_screen/home_screen.dart';
+import 'package:vnote/presentation/screens/onboarding_screens/widgets/gradient_icon_box.dart';
 import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_strings.dart';
 import 'package:vnote/core/constants/app_typography.dart';
@@ -104,7 +104,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
         ),
       ),
       bottomSheet: Container(
-        color: Theme.of(context).colorScheme.surface,
+        color: Theme.of(context).scaffoldBackgroundColor,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         height: 80,
         child: Padding(
@@ -134,7 +134,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                     dotWidth: 12,
                     dotColor: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.3),
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                     activeDotColor: AppColors.red,
                   ),
                 ),

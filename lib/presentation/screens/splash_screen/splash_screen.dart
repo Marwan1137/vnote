@@ -1,7 +1,7 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:vnote/UI/screens/onboarding_screens/onboarding_screens.dart';
+import 'package:vnote/presentation/screens/onboarding_screens/onboarding_screens.dart';
 import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_strings.dart';
 import 'package:vnote/core/constants/app_typography.dart';
@@ -32,7 +32,7 @@ class SplashScreen extends StatelessWidget {
                     ValueDelegate.color([
                       'mic Outlines',
                       '**',
-                    ], value: isDark ? AppColors.darkestGray : AppColors.white),
+                    ], value: isDark ? AppColors.white : AppColors.white),
                   ],
                 ),
               ),
@@ -44,7 +44,7 @@ class SplashScreen extends StatelessWidget {
                   AppStrings.appFirstName,
                   style: TextStyle(
                     fontSize: AppTypography.size48,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: AppColors.red,
                     fontWeight: AppTypography.bold,
                   ),
                 ),

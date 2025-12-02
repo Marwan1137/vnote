@@ -14,4 +14,22 @@ class AppStrings {
   static const String getStartedButton = 'Start';
   static const String skipButton = 'Skip';
   static const String nextButton = 'Next';
+
+  // Recording Screen
+  static const String recordingTitle = 'Voice Recording';
+  static const String recordingSubtitle = 'Tap to start recording';
+  static const String recordingInProgress = 'Recording...';
+  static const String stopRecording = 'Stop Recording';
+  static const String cancelRecording = 'Cancel';
+  static const String processingRecording = 'Processing...';
+  static const String transcribingAudio = 'Transcribing audio...';
+  static const String generatingNote = 'Generating note...';
+  static const String recordingPermissionDenied =
+      'Microphone permission is required to record voice notes';
+  static const String recordingError = 'Recording failed. Please try again.';
+  static const String transcriptionError =
+      'Transcription failed. Please try again.';
+  static const String aiProcessingError =
+      'AI processing failed. Please try again.';
+  static const String noteCreatedSuccessfully = 'Note created successfully!';
 }
