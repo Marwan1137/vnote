@@ -79,11 +79,16 @@ class RecordingFormatSelection extends RecordingState {
 class RecordingProcessed extends RecordingState {
   final Recording recording;
   final ProcessedNote processedNote;
+  final String? transcription;
 
-  const RecordingProcessed(this.recording, this.processedNote);
+  const RecordingProcessed(
+    this.recording,
+    this.processedNote, [
+    this.transcription,
+  ]);
 
   @override
-  List<Object?> get props => [recording, processedNote];
+  List<Object?> get props => [recording, processedNote, transcription];
 }
 
 class RecordingError extends RecordingState {

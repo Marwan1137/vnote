@@ -1,7 +1,7 @@
 class AppStrings {
-  static const String appFirstName = 'V';
-  static const String appSecondName = 'Note';
-  static const String appTagline = 'Note taking made simple';
+  static const String appFirstName = 'VO';
+  static const String appSecondName = 'YA';
+  static const String appTagline = 'One voice. Total control.';
   static const String onboardingTitle1 = 'Speak Freely';
   static const String onboardingSubtitle1 =
       'Record your thoughts in any language. Our local AI transcribes everything offline.';

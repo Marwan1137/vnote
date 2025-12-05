@@ -3,7 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:vnote/presentation/screens/home_screen/home_screen.dart';
+import 'package:vnote/core/di/di.dart';
+import 'package:vnote/core/services/onboarding_service.dart';
+import 'package:vnote/presentation/screens/permission/permission_screen.dart';
 import 'package:vnote/presentation/screens/onboarding_screens/widgets/gradient_icon_box.dart';
 import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_strings.dart';
@@ -115,10 +117,17 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
               _buildButton(
                 context: context,
                 text: AppStrings.skipButton,
-                onPressed: () => Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                ),
+                onPressed: () async {
+                  await getIt<OnboardingService>().markOnboardingCompleted();
+                  if (context.mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PermissionScreen(),
+                      ),
+                    );
+                  }
+                },
               ),
               Center(
                 child: SmoothPageIndicator(
@@ -144,17 +153,24 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                 text: currentPage == 2
                     ? AppStrings.getStartedButton
                     : AppStrings.nextButton,
-                onPressed: () => (currentPage == 2)
-                    ? Navigator.pushReplacement(
+                onPressed: () async {
+                  if (currentPage == 2) {
+                    await getIt<OnboardingService>().markOnboardingCompleted();
+                    if (context.mounted) {
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const HomeScreen(),
+                          builder: (context) => const PermissionScreen(),
                         ),
-                      )
-                    : controller.nextPage(
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeInOut,
-                      ),
+                      );
+                    }
+                  } else {
+                    controller.nextPage(
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                },
               ),
             ],
           ),

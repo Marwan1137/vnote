@@ -221,7 +221,13 @@ class RecordingCubit extends Cubit<RecordingState> {
     final result = await createNoteUseCase(CreateNoteParams(note));
     result.fold(
       (failure) => emit(RecordingError(failure.message)),
-      (_) => emit(RecordingProcessed(recording, _createBasicProcessedNote())),
+      (_) => emit(
+        RecordingProcessed(
+          recording,
+          _createBasicProcessedNote(),
+          transcription,
+        ),
+      ),
     );
   }
 
@@ -409,7 +415,7 @@ class RecordingCubit extends Cubit<RecordingState> {
     final result = await createNoteUseCase(CreateNoteParams(note));
     result.fold(
       (failure) => emit(RecordingError(failure.message)),
-      (_) => emit(RecordingProcessed(recording, processedNote)),
+      (_) => emit(RecordingProcessed(recording, processedNote, null)),
     );
   }
 

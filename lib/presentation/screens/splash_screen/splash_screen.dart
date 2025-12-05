@@ -1,13 +1,72 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:vnote/core/di/di.dart';
+import 'package:vnote/core/services/onboarding_service.dart';
+import 'package:vnote/domain/usecases/check_microphone_permission_usecase.dart';
+import 'package:vnote/domain/usecases/usecase.dart';
+import 'package:vnote/presentation/screens/home_screen/home_screen.dart';
 import 'package:vnote/presentation/screens/onboarding_screens/onboarding_screens.dart';
+import 'package:vnote/presentation/screens/permission/permission_screen.dart';
 import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_strings.dart';
 import 'package:vnote/core/constants/app_typography.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  Widget? _nextScreen;
+
+  @override
+  void initState() {
+    super.initState();
+    _determineNextScreen();
+  }
+
+  Future<void> _determineNextScreen() async {
+    final onboardingService = getIt<OnboardingService>();
+    final hasCompletedOnboarding = await onboardingService
+        .hasCompletedOnboarding();
+
+    if (mounted) {
+      if (!hasCompletedOnboarding) {
+        setState(() {
+          _nextScreen = const OnBoardingScreen();
+        });
+        return;
+      }
+
+      // If onboarding is completed, check if permission is already granted
+      final checkPermissionUseCase = getIt<CheckMicrophonePermissionUseCase>();
+      final permissionResult = await checkPermissionUseCase(const NoParams());
+
+      permissionResult.fold(
+        (failure) {
+          // Permission check failed, show permission screen
+          if (mounted) {
+            setState(() {
+              _nextScreen = const PermissionScreen();
+            });
+          }
+        },
+        (hasPermission) {
+          // If permission is already granted, go directly to home screen
+          if (mounted) {
+            setState(() {
+              _nextScreen = hasPermission
+                  ? const HomeScreen()
+                  : const PermissionScreen();
+            });
+          }
+        },
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +135,7 @@ class SplashScreen extends StatelessWidget {
             ),
           ],
         ),
-        nextScreen: const OnBoardingScreen(),
+        nextScreen: _nextScreen ?? const OnBoardingScreen(),
         splashIconSize: 400,
         backgroundColor: Colors.transparent,
       ),

@@ -8,8 +8,12 @@ import 'package:vnote/core/constants/app_typography.dart';
 import 'package:vnote/presentation/cubit/recording/recording_cubit.dart';
 import 'package:vnote/presentation/cubit/recording/recording_state.dart';
 
+enum RecordingMode { note, payment }
+
 class RecordingScreen extends StatefulWidget {
-  const RecordingScreen({super.key});
+  final RecordingMode mode;
+
+  const RecordingScreen({super.key, this.mode = RecordingMode.note});
 
   @override
   State<RecordingScreen> createState() => _RecordingScreenState();
@@ -42,13 +46,15 @@ class _RecordingScreenState extends State<RecordingScreen>
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => context.read<RecordingCubit>()..checkPermission(),
-      child: const _RecordingScreenContent(),
+      child: _RecordingScreenContent(mode: widget.mode),
     );
   }
 }
 
 class _RecordingScreenContent extends StatelessWidget {
-  const _RecordingScreenContent();
+  final RecordingMode mode;
+
+  const _RecordingScreenContent({required this.mode});
 
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes.toString().padLeft(2, '0');
@@ -69,10 +75,13 @@ class _RecordingScreenContent extends StatelessWidget {
       body: BlocConsumer<RecordingCubit, RecordingState>(
         listener: (context, state) {
           if (state is RecordingProcessed) {
-            Navigator.pop(
-              context,
-              true,
-            ); // Return true to indicate note was created
+            if (mode == RecordingMode.payment) {
+              // For payments, return the transcription string
+              Navigator.pop(context, state.transcription);
+            } else {
+              // For notes, return true to indicate note was created
+              Navigator.pop(context, true);
+            }
           } else if (state is RecordingError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -119,10 +128,21 @@ class _RecordingScreenContent extends StatelessWidget {
           }
 
           if (state is RecordingProcessing) {
-            return _buildProcessingState(context, AppStrings.generatingNote);
+            final message = mode == RecordingMode.payment
+                ? 'Processing payment...'
+                : AppStrings.generatingNote;
+            return _buildProcessingState(context, message);
           }
 
           if (state is RecordingFormatSelection) {
+            // For payments, skip format selection and return transcription directly
+            if (mode == RecordingMode.payment) {
+              // Return transcription immediately for payments
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.pop(context, state.transcription);
+              });
+              return _buildProcessingState(context, 'Processing payment...');
+            }
             return _buildFormatSelectionState(context, state);
           }
 

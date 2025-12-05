@@ -60,6 +60,7 @@ dependencies:
   googleapis: ^15.0.0
   googleapis_auth: ^2.0.0
   google_generative_ai: ^0.4.0
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:

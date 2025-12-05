@@ -6,9 +6,10 @@ import '../datasources_contracts/notes_local_datasource.dart';
 
 @LazySingleton(as: NotesLocalDataSource)
 class NotesLocalDataSourceImpl implements NotesLocalDataSource {
-  final Box<NoteModel> notesBox;
+  @factoryMethod
+  NotesLocalDataSourceImpl(@Named('notesBox') this.notesBox);
 
-  NotesLocalDataSourceImpl(this.notesBox);
+  final Box<NoteModel> notesBox;
 
   @override
   Future<List<NoteModel>> getAllNotes() async {
