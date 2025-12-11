@@ -2,16 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uuid/uuid.dart';
 import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_typography.dart';
 import 'package:vnote/domain/entities/note.dart';
 import 'package:vnote/presentation/cubit/notes/notes_cubit.dart';
 
 class NoteDetailScreen extends StatefulWidget {
-  final Note? note;
+  final Note note;
 
-  const NoteDetailScreen({super.key, this.note});
+  const NoteDetailScreen({super.key, required this.note});
 
   @override
   State<NoteDetailScreen> createState() => _NoteDetailScreenState();
@@ -29,13 +28,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.note?.title ?? '');
-    _contentController = TextEditingController(
-      text: widget.note?.content ?? '',
-    );
+    _titleController = TextEditingController(text: widget.note.title);
+    _contentController = TextEditingController(text: widget.note.content);
     _tagController = TextEditingController();
-    _tags = List<String>.from(widget.note?.tags ?? []);
-    _isFavorite = widget.note?.isFavorite ?? false;
+    _tags = List<String>.from(widget.note.tags);
+    _isFavorite = widget.note.isFavorite;
 
     _titleController.addListener(_onTextChanged);
     _contentController.addListener(_onTextChanged);
@@ -98,11 +95,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
     final now = DateTime.now();
     final note = Note(
-      id: widget.note?.id ?? const Uuid().v4(),
+      id: widget.note.id,
       title: title.isEmpty ? 'Untitled' : title,
       content: content,
       tags: _tags,
-      createdAt: widget.note?.createdAt ?? now,
+      createdAt: widget.note.createdAt,
       updatedAt: now,
       isFavorite: _isFavorite,
       wordCount: content
@@ -112,14 +109,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     );
 
     final cubit = context.read<NotesCubit>();
-
-    if (widget.note == null) {
-      // Create new note
-      await cubit.createNote(note);
-    } else {
-      // Update existing note
-      await cubit.updateNote(note);
-    }
+    await cubit.updateNote(note);
 
     if (mounted) {
       setState(() {
@@ -131,11 +121,6 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   Future<void> _deleteNote() async {
-    if (widget.note == null) {
-      Navigator.pop(context);
-      return;
-    }
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -156,7 +141,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     );
 
     if (confirmed == true && mounted) {
-      await context.read<NotesCubit>().deleteNote(widget.note!.id);
+      await context.read<NotesCubit>().deleteNote(widget.note.id);
       if (mounted) {
         Navigator.pop(context);
       }
@@ -205,21 +190,17 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
-            widget.note == null ? 'New Note' : 'Edit Note',
-            style: AppTypography.h6,
-          ),
+          title: const Text('Edit Note', style: AppTypography.h6),
           actions: [
             IconButton(
               icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),
               color: _isFavorite ? AppColors.red : null,
               onPressed: _toggleFavorite,
             ),
-            if (widget.note != null)
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                onPressed: _deleteNote,
-              ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: _deleteNote,
+            ),
             IconButton(
               icon: _isSaving
                   ? const SizedBox(
@@ -295,41 +276,39 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 minLines: 10,
                 textAlignVertical: TextAlignVertical.top,
               ),
-              // Note info (if editing)
-              if (widget.note != null) ...[
-                const SizedBox(height: 24),
-                Divider(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+              // Note info
+              const SizedBox(height: 24),
+              Divider(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Created: ${_formatDate(widget.note.createdAt)}',
+                style: AppTypography.caption.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.5),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Created: ${_formatDate(widget.note!.createdAt)}',
-                  style: AppTypography.caption.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.5),
-                  ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Updated: ${_formatDate(widget.note.updatedAt)}',
+                style: AppTypography.caption.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.5),
                 ),
+              ),
+              if (widget.note.wordCount > 0) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Updated: ${_formatDate(widget.note!.updatedAt)}',
+                  'Words: ${widget.note.wordCount}',
                   style: AppTypography.caption.copyWith(
                     color: Theme.of(
                       context,
                     ).colorScheme.onSurface.withOpacity(0.5),
                   ),
                 ),
-                if (widget.note!.wordCount > 0) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    'Words: ${widget.note!.wordCount}',
-                    style: AppTypography.caption.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.5),
-                    ),
-                  ),
-                ],
               ],
             ],
           ),

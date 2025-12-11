@@ -14,6 +14,8 @@ import 'package:vnote/presentation/screens/home_screen/widgets/filter_chips.dart
 import 'package:vnote/presentation/screens/note_detail/note_detail_screen.dart';
 import 'package:vnote/presentation/screens/recording/recording_screen.dart';
 import 'package:vnote/presentation/cubit/recording/recording_cubit.dart';
+import 'package:vnote/presentation/widgets/unified_mic_fab.dart';
+import 'package:vnote/core/utils/page_transitions.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -59,18 +61,7 @@ class _NotesScreenState extends State<NotesScreen> {
   void _onNoteTap(Note note) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => NoteDetailScreen(note: note)),
-    ).then((_) {
-      if (mounted) {
-        context.read<NotesCubit>().loadNotes();
-      }
-    });
-  }
-
-  void _onCreateNote() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const NoteDetailScreen()),
+      SlidePageRoute(page: NoteDetailScreen(note: note)),
     ).then((_) {
       if (mounted) {
         context.read<NotesCubit>().loadNotes();
@@ -81,8 +72,8 @@ class _NotesScreenState extends State<NotesScreen> {
   void _onStartRecording() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => BlocProvider(
+      FadePageRoute(
+        page: BlocProvider(
           create: (context) => getIt<RecordingCubit>(),
           child: const RecordingScreen(),
         ),
@@ -157,7 +148,7 @@ class _NotesScreenState extends State<NotesScreen> {
           }
 
           if (state is NotesEmpty) {
-            return EmptyState(onCreateNote: _onCreateNote);
+            return const EmptyState();
           }
 
           if (state is NotesLoaded) {
@@ -174,7 +165,6 @@ class _NotesScreenState extends State<NotesScreen> {
                   Expanded(
                     child: state.filteredNotes.isEmpty
                         ? EmptyState(
-                            onCreateNote: _onCreateNote,
                             message: state.searchQuery != null
                                 ? 'No notes found for "${state.searchQuery}"'
                                 : 'No notes in this category',
@@ -207,23 +197,9 @@ class _NotesScreenState extends State<NotesScreen> {
           return const SizedBox.shrink();
         },
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            onPressed: _onStartRecording,
-            backgroundColor: AppColors.red,
-            heroTag: 'mic_fab',
-            child: const Icon(Icons.mic, color: Colors.white),
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            onPressed: _onCreateNote,
-            backgroundColor: AppColors.purple,
-            heroTag: 'add_fab',
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-        ],
+      floatingActionButton: UnifiedMicFab(
+        onPressed: _onStartRecording,
+        heroTag: 'mic_fab',
       ),
     );
   }

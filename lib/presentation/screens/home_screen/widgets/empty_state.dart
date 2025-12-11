@@ -1,12 +1,13 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_typography.dart';
 
 class EmptyState extends StatelessWidget {
-  final VoidCallback onCreateNote;
   final String? message;
 
-  const EmptyState({super.key, required this.onCreateNote, this.message});
+  const EmptyState({super.key, this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -20,14 +21,10 @@ class EmptyState extends StatelessWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: AppColors.red.withValues(alpha: 0.1),
+                color: AppColors.red.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.note_add_outlined,
-                size: 64,
-                color: AppColors.red,
-              ),
+              child: Icon(Icons.mic_outlined, size: 64, color: AppColors.red),
             ),
             const SizedBox(height: 24),
             Text(
@@ -40,31 +37,14 @@ class EmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               message == null
-                  ? 'Tap the + button to create your first note'
-                  : 'Try creating a new note or adjusting your search',
+                  ? 'Tap the microphone button to create your first note'
+                  : 'Try adjusting your search or tap the microphone to create a new note',
               style: AppTypography.bodyMedium.copyWith(
                 color: Theme.of(
                   context,
                 ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: onCreateNote,
-              icon: const Icon(Icons.add),
-              label: const Text('Create Note'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.red,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
             ),
           ],
         ),

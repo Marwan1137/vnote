@@ -34,8 +34,14 @@ class EventsCalendar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.all(16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -61,15 +67,15 @@ class EventsCalendar extends StatelessWidget {
               calendarStyle: CalendarStyle(
                 outsideDaysVisible: false,
                 todayDecoration: BoxDecoration(
-                  color: AppColors.green.withOpacity(0.3),
+                  color: AppColors.green.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 selectedDecoration: BoxDecoration(
-                  color: AppColors.green,
+                  color: AppColors.green.withOpacity(0.8),
                   shape: BoxShape.circle,
                 ),
                 markerDecoration: BoxDecoration(
-                  color: AppColors.green,
+                  color: AppColors.green.withOpacity(0.7),
                   shape: BoxShape.circle,
                 ),
                 markersMaxCount: 1,

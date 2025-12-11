@@ -59,13 +59,14 @@ class FilterTabs extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.purple.withOpacity(0.2)
+                ? AppColors.purple.withOpacity(0.15)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
-                  ? AppColors.purple
-                  : Colors.grey.withOpacity(0.3),
+                  ? AppColors.purple.withOpacity(0.6)
+                  : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              width: 1,
             ),
           ),
           child: Text(

@@ -8,6 +8,7 @@ import 'package:vnote/presentation/cubit/events/events_cubit.dart';
 import 'package:vnote/presentation/cubit/notes/notes_cubit.dart';
 import 'package:vnote/presentation/cubit/notes/notes_state.dart';
 import 'package:vnote/presentation/cubit/payments/payments_cubit.dart';
+import 'package:vnote/core/utils/page_transitions.dart';
 import 'package:vnote/presentation/screens/events/events_screen.dart';
 import 'package:vnote/presentation/screens/home_screen/widgets/feature_card.dart';
 import 'package:vnote/presentation/screens/notes/notes_screen.dart';
@@ -28,17 +29,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToNotes() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const NotesScreen()),
-    );
+    Navigator.push(context, SlidePageRoute(page: const NotesScreen()));
   }
 
   void _navigateToPayments() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => BlocProvider(
+      SlidePageRoute(
+        page: BlocProvider(
           create: (context) => getIt<PaymentsCubit>(),
           child: const PaymentsScreen(),
         ),
@@ -49,8 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToEvents() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => BlocProvider(
+      SlidePageRoute(
+        page: BlocProvider(
           create: (context) => getIt<EventsCubit>(),
           child: const EventsScreen(),
         ),

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_typography.dart';
@@ -85,8 +87,9 @@ class FilterChips extends StatelessWidget {
       ),
       side: BorderSide(
         color: isSelected
-            ? AppColors.red
-            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+            ? AppColors.red.withOpacity(0.6)
+            : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        width: 1,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     );

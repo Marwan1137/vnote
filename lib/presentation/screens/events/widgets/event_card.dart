@@ -1,6 +1,7 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_typography.dart';
 import 'package:vnote/domain/entities/event.dart';
 
@@ -29,14 +30,14 @@ class EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
+      elevation: 1,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: event.color, width: 2),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: event.color.withOpacity(0.6), width: 1.5),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -49,13 +50,21 @@ class EventCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.access_time, size: 16, color: AppColors.gray),
+                  Icon(
+                    Icons.access_time,
+                    size: 16,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       _formatDateTime(event.dateTime),
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.gray,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -65,13 +74,21 @@ class EventCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.location_on, size: 16, color: AppColors.gray),
+                    Icon(
+                      Icons.location_on,
+                      size: 16,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         event.location!,
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.gray,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ),
@@ -82,12 +99,20 @@ class EventCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.people, size: 16, color: AppColors.gray),
+                    Icon(
+                      Icons.people,
+                      size: 16,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${event.attendeesCount} ${event.attendeesCount == 1 ? 'attendee' : 'attendees'}',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.gray,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

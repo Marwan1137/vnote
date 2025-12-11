@@ -28,10 +28,10 @@ class PaymentCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
+      elevation: 1,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor, width: 2),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: borderColor.withOpacity(0.6), width: 1.5),
       ),
       child: InkWell(
         onTap: onTap,
@@ -58,12 +58,20 @@ class PaymentCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.category, size: 16, color: AppColors.gray),
+                  Icon(
+                    Icons.category,
+                    size: 16,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     payment.category,
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.gray,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -82,12 +90,20 @@ class PaymentCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 16, color: AppColors.gray),
+                    Icon(
+                      Icons.calendar_today,
+                      size: 16,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Due: ${DateFormat('MMM d, yyyy').format(payment.dueDate)}',
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.gray,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -105,12 +121,20 @@ class PaymentCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.access_time, size: 16, color: AppColors.gray),
+                  Icon(
+                    Icons.access_time,
+                    size: 16,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Created: ${DateFormat('MMM d, yyyy').format(payment.createdAt)}',
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.gray,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],

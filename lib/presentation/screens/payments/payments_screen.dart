@@ -7,12 +7,13 @@ import 'package:vnote/domain/entities/payment.dart';
 import 'package:vnote/presentation/cubit/payments/payments_cubit.dart';
 import 'package:vnote/presentation/cubit/payments/payments_state.dart';
 import 'package:vnote/presentation/cubit/recording/recording_cubit.dart';
-import 'package:vnote/presentation/screens/payments/add_payment_screen.dart';
 import 'package:vnote/presentation/screens/payments/payment_detail_screen.dart';
 import 'package:vnote/presentation/screens/payments/widgets/filter_tabs.dart';
 import 'package:vnote/presentation/screens/payments/widgets/monthly_summary_card.dart';
 import 'package:vnote/presentation/screens/payments/widgets/payment_card.dart';
 import 'package:vnote/presentation/screens/recording/recording_screen.dart';
+import 'package:vnote/presentation/widgets/unified_mic_fab.dart';
+import 'package:vnote/core/utils/page_transitions.dart';
 
 class PaymentsScreen extends StatefulWidget {
   const PaymentsScreen({super.key});
@@ -64,21 +65,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       selectedMonth = month;
     });
     context.read<PaymentsCubit>().loadPaymentsByMonth(year, month);
-  }
-
-  void _onAddPayment() {
-    final cubit = context.read<PaymentsCubit>();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            BlocProvider.value(value: cubit, child: const AddPaymentScreen()),
-      ),
-    ).then((_) {
-      if (mounted) {
-        cubit.loadPayments();
-      }
-    });
   }
 
   @override
@@ -140,18 +126,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   Text('No payments yet', style: AppTypography.h4),
                   const SizedBox(height: 8),
                   Text(
-                    'Add your first payment to get started',
+                    'Tap the microphone button to add your first payment',
                     style: AppTypography.bodyMedium,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: _onAddPayment,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Payment'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.red,
-                      foregroundColor: Colors.white,
-                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -227,23 +204,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           return true;
         },
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            onPressed: _onStartVoiceRecording,
-            backgroundColor: AppColors.red,
-            heroTag: 'mic_fab_payments',
-            child: const Icon(Icons.mic, color: Colors.white),
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            onPressed: _onAddPayment,
-            backgroundColor: AppColors.purple,
-            heroTag: 'add_fab_payments',
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-        ],
+      floatingActionButton: UnifiedMicFab(
+        onPressed: _onStartVoiceRecording,
+        heroTag: 'mic_fab_payments',
       ),
     );
   }
@@ -251,8 +214,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   void _onStartVoiceRecording() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => BlocProvider(
+      FadePageRoute(
+        page: BlocProvider(
           create: (context) => getIt<RecordingCubit>(),
           child: const RecordingScreen(mode: RecordingMode.payment),
         ),

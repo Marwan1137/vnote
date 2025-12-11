@@ -4,8 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_typography.dart';
 import 'package:vnote/core/constants/currencies.dart';
+import 'package:vnote/core/utils/page_transitions.dart';
 import 'package:vnote/domain/entities/payment.dart';
 import 'package:vnote/presentation/cubit/payments/payments_cubit.dart';
+import 'package:vnote/presentation/cubit/payments/payments_state.dart';
 import 'package:vnote/presentation/screens/payments/add_payment_screen.dart';
 
 class PaymentDetailScreen extends StatelessWidget {
@@ -15,122 +17,144 @@ class PaymentDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Payment Details'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              final cubit = context.read<PaymentsCubit>();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BlocProvider.value(
-                    value: cubit,
-                    child: AddPaymentScreen(payment: payment),
-                  ),
+    return BlocBuilder<PaymentsCubit, PaymentsState>(
+      builder: (context, state) {
+        // Get the updated payment from state if available
+        Payment currentPayment = payment;
+        if (state is PaymentsLoaded) {
+          final updatedPayment = state.payments.firstWhere(
+            (p) => p.id == payment.id,
+            orElse: () => payment,
+          );
+          currentPayment = updatedPayment;
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Payment Details'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  final cubit = context.read<PaymentsCubit>();
+                  Navigator.push(
+                    context,
+                    SlidePageRoute(
+                      page: BlocProvider.value(
+                        value: cubit,
+                        child: AddPaymentScreen(payment: currentPayment),
+                      ),
+                    ),
+                  ).then((result) {
+                    if (result == true && context.mounted) {
+                      // Reload payments to get updated data
+                      cubit.loadPayments();
+                    }
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => _showDeleteDialog(context, currentPayment),
+              ),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDetailCard(
+                  context,
+                  'Title',
+                  currentPayment.title,
+                  Icons.title,
                 ),
-              ).then((_) {
-                if (context.mounted) {
-                  cubit.loadPayments();
-                }
-              });
-            },
+                const SizedBox(height: 16),
+                _buildDetailCard(
+                  context,
+                  'Amount',
+                  '${currentPayment.type == PaymentType.toPay ? '-' : '+'}${Currencies.getSymbol(currentPayment.currency)}${currentPayment.amount.toStringAsFixed(2)}',
+                  Icons.attach_money,
+                  color: currentPayment.type == PaymentType.toPay
+                      ? AppColors.red
+                      : AppColors.green,
+                ),
+                const SizedBox(height: 16),
+                _buildDetailCard(
+                  context,
+                  'Type',
+                  currentPayment.type == PaymentType.toPay
+                      ? 'To Pay'
+                      : 'To Receive',
+                  currentPayment.type == PaymentType.toPay
+                      ? Icons.trending_down
+                      : Icons.trending_up,
+                  color: currentPayment.type == PaymentType.toPay
+                      ? AppColors.red
+                      : AppColors.green,
+                ),
+                const SizedBox(height: 16),
+                _buildDetailCard(
+                  context,
+                  'Status',
+                  _getStatusText(currentPayment.status),
+                  _getStatusIcon(currentPayment.status),
+                  color: _getStatusColor(currentPayment.status),
+                ),
+                const SizedBox(height: 16),
+                _buildDetailCard(
+                  context,
+                  'Due Date',
+                  DateFormat('MMMM d, yyyy').format(currentPayment.dueDate),
+                  Icons.calendar_today,
+                ),
+                const SizedBox(height: 16),
+                _buildDetailCard(
+                  context,
+                  'Created Date',
+                  DateFormat('MMMM d, yyyy').format(currentPayment.createdAt),
+                  Icons.access_time,
+                ),
+                const SizedBox(height: 16),
+                _buildDetailCard(
+                  context,
+                  'Category',
+                  currentPayment.category,
+                  Icons.category,
+                ),
+                if (currentPayment.isRecurring) ...[
+                  const SizedBox(height: 16),
+                  _buildDetailCard(
+                    context,
+                    'Recurring',
+                    currentPayment.recurringFrequency ?? 'Monthly',
+                    Icons.repeat,
+                    color: AppColors.purple,
+                  ),
+                ],
+                if (currentPayment.notificationDays.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _buildDetailCard(
+                    context,
+                    'Notifications',
+                    currentPayment.notificationDays
+                        .map(
+                          (days) => days == 0
+                              ? 'Same day'
+                              : days == 1
+                              ? '1 day before'
+                              : '$days days before',
+                        )
+                        .join(', '),
+                    Icons.notifications,
+                  ),
+                ],
+              ],
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _showDeleteDialog(context),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailCard(context, 'Title', payment.title, Icons.title),
-            const SizedBox(height: 16),
-            _buildDetailCard(
-              context,
-              'Amount',
-              '${payment.type == PaymentType.toPay ? '-' : '+'}${Currencies.getSymbol(payment.currency)}${payment.amount.toStringAsFixed(2)}',
-              Icons.attach_money,
-              color: payment.type == PaymentType.toPay
-                  ? AppColors.red
-                  : AppColors.green,
-            ),
-            const SizedBox(height: 16),
-            _buildDetailCard(
-              context,
-              'Type',
-              payment.type == PaymentType.toPay ? 'To Pay' : 'To Receive',
-              payment.type == PaymentType.toPay
-                  ? Icons.trending_down
-                  : Icons.trending_up,
-              color: payment.type == PaymentType.toPay
-                  ? AppColors.red
-                  : AppColors.green,
-            ),
-            const SizedBox(height: 16),
-            _buildDetailCard(
-              context,
-              'Status',
-              _getStatusText(payment.status),
-              _getStatusIcon(payment.status),
-              color: _getStatusColor(payment.status),
-            ),
-            const SizedBox(height: 16),
-            _buildDetailCard(
-              context,
-              'Due Date',
-              DateFormat('MMMM d, yyyy').format(payment.dueDate),
-              Icons.calendar_today,
-            ),
-            const SizedBox(height: 16),
-            _buildDetailCard(
-              context,
-              'Created Date',
-              DateFormat('MMMM d, yyyy').format(payment.createdAt),
-              Icons.access_time,
-            ),
-            const SizedBox(height: 16),
-            _buildDetailCard(
-              context,
-              'Category',
-              payment.category,
-              Icons.category,
-            ),
-            if (payment.isRecurring) ...[
-              const SizedBox(height: 16),
-              _buildDetailCard(
-                context,
-                'Recurring',
-                payment.recurringFrequency ?? 'Monthly',
-                Icons.repeat,
-                color: AppColors.purple,
-              ),
-            ],
-            if (payment.notificationDays.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _buildDetailCard(
-                context,
-                'Notifications',
-                payment.notificationDays
-                    .map(
-                      (days) => days == 0
-                          ? 'Same day'
-                          : days == 1
-                          ? '1 day before'
-                          : '$days days before',
-                    )
-                    .join(', '),
-                Icons.notifications,
-              ),
-            ],
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -163,14 +187,16 @@ class PaymentDetailScreen extends StatelessWidget {
                   Text(
                     label,
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.gray,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
                     style: AppTypography.bodyLarge.copyWith(
-                      color: color,
+                      color: color ?? Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -222,7 +248,7 @@ class PaymentDetailScreen extends StatelessWidget {
     }
   }
 
-  void _showDeleteDialog(BuildContext context) {
+  void _showDeleteDialog(BuildContext context, Payment payment) {
     final cubit = context.read<PaymentsCubit>();
     showDialog(
       context: context,

@@ -14,9 +14,9 @@ import 'package:vnote/presentation/cubit/recording/recording_cubit.dart';
 import 'package:vnote/presentation/screens/recording/recording_screen.dart';
 
 class AddPaymentScreen extends StatefulWidget {
-  final Payment? payment;
+  final Payment payment;
 
-  const AddPaymentScreen({super.key, this.payment});
+  const AddPaymentScreen({super.key, required this.payment});
 
   @override
   State<AddPaymentScreen> createState() => _AddPaymentScreenState();
@@ -38,19 +38,15 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.payment != null) {
-      _titleController.text = widget.payment!.title;
-      _amountController.text = widget.payment!.amount.toString();
-      _selectedType = widget.payment!.type;
-      _selectedDate = widget.payment!.dueDate;
-      _selectedCategory = widget.payment!.category;
-      _selectedCurrency = widget.payment!.currency;
-      _isRecurring = widget.payment!.isRecurring;
-      _recurringFrequency = widget.payment!.recurringFrequency;
-      _notificationDays = widget.payment!.notificationDays;
-    } else {
-      _selectedDate = DateTime.now();
-    }
+    _titleController.text = widget.payment.title;
+    _amountController.text = widget.payment.amount.toString();
+    _selectedType = widget.payment.type;
+    _selectedDate = widget.payment.dueDate;
+    _selectedCategory = widget.payment.category;
+    _selectedCurrency = widget.payment.currency;
+    _isRecurring = widget.payment.isRecurring;
+    _recurringFrequency = widget.payment.recurringFrequency;
+    _notificationDays = widget.payment.notificationDays;
   }
 
   @override
@@ -107,9 +103,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
     if (_formKey.currentState!.validate() && _selectedDate != null) {
       final now = DateTime.now();
       final payment = Payment(
-        id:
-            widget.payment?.id ??
-            DateTime.now().millisecondsSinceEpoch.toString(),
+        id: widget.payment.id,
         title: _titleController.text.trim(),
         amount: double.parse(_amountController.text),
         currency: _selectedCurrency,
@@ -120,15 +114,11 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         isRecurring: _isRecurring,
         recurringFrequency: _recurringFrequency,
         notificationDays: _notificationDays,
-        createdAt: widget.payment?.createdAt ?? now,
+        createdAt: widget.payment.createdAt,
         updatedAt: now,
       );
 
-      if (widget.payment != null) {
-        context.read<PaymentsCubit>().updatePayment(payment);
-      } else {
-        context.read<PaymentsCubit>().createPayment(payment);
-      }
+      context.read<PaymentsCubit>().updatePayment(payment);
 
       Navigator.pop(context, true);
     }
@@ -167,7 +157,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.payment != null ? 'Edit Payment' : 'New Payment'),
+        title: const Text('Edit Payment'),
         actions: [
           IconButton(
             icon: const Icon(Icons.mic),

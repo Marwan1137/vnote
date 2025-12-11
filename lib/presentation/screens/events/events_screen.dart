@@ -15,6 +15,8 @@ import 'package:vnote/presentation/screens/events/widgets/event_card.dart';
 import 'package:vnote/presentation/screens/events/widgets/events_calendar.dart';
 import 'package:vnote/presentation/screens/events/widgets/filter_tabs.dart';
 import 'package:vnote/presentation/screens/recording/recording_screen.dart';
+import 'package:vnote/presentation/widgets/unified_mic_fab.dart';
+import 'package:vnote/core/utils/page_transitions.dart';
 
 class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
@@ -69,8 +71,8 @@ class _EventsScreenState extends State<EventsScreen> {
   void _onStartVoiceRecording() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => BlocProvider(
+      FadePageRoute(
+        page: BlocProvider(
           create: (context) => getIt<RecordingCubit>(),
           child: const RecordingScreen(mode: RecordingMode.event),
         ),
@@ -180,7 +182,13 @@ class _EventsScreenState extends State<EventsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.event, size: 64, color: AppColors.gray),
+                  Icon(
+                    Icons.event,
+                    size: 64,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
                   const SizedBox(height: 16),
                   Text('No events yet', style: AppTypography.h4),
                   const SizedBox(height: 8),
@@ -226,8 +234,8 @@ class _EventsScreenState extends State<EventsScreen> {
                                 final cubit = context.read<EventsCubit>();
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (context) => BlocProvider.value(
+                                  SlidePageRoute(
+                                    page: BlocProvider.value(
                                       value: cubit,
                                       child: EventDetailScreen(event: event),
                                     ),
@@ -249,11 +257,9 @@ class _EventsScreenState extends State<EventsScreen> {
           return const SizedBox.shrink();
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: UnifiedMicFab(
         onPressed: _onStartVoiceRecording,
-        backgroundColor: AppColors.purple,
         heroTag: 'mic_fab_events',
-        child: const Icon(Icons.mic, color: Colors.white),
       ),
     );
   }
