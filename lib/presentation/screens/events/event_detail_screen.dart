@@ -1,0 +1,187 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:vnote/core/constants/app_colors.dart';
+import 'package:vnote/core/constants/app_typography.dart';
+import 'package:vnote/domain/entities/event.dart';
+import 'package:vnote/presentation/cubit/events/events_cubit.dart';
+
+class EventDetailScreen extends StatelessWidget {
+  final Event event;
+
+  const EventDetailScreen({super.key, required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Event Details'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () => _showDeleteDialog(context),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              event.title,
+              style: AppTypography.h3.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            _buildDetailRow(
+              context,
+              Icons.access_time,
+              'Date & Time',
+              '${DateFormat('MMM d, y').format(event.dateTime)} at ${DateFormat('h:mm a').format(event.dateTime)}',
+            ),
+            if (event.location != null)
+              _buildDetailRow(
+                context,
+                Icons.location_on,
+                'Location',
+                event.location!,
+              ),
+            if (event.attendeesCount != null)
+              _buildDetailRow(
+                context,
+                Icons.people,
+                'Attendees',
+                '${event.attendeesCount} ${event.attendeesCount == 1 ? 'attendee' : 'attendees'}',
+              ),
+            _buildDetailRow(
+              context,
+              Icons.info_outline,
+              'Status',
+              event.status == EventStatus.upcoming
+                  ? 'Upcoming'
+                  : event.status == EventStatus.completed
+                  ? 'Completed'
+                  : 'Cancelled',
+            ),
+            if (event.isRecurring)
+              _buildDetailRow(
+                context,
+                Icons.repeat,
+                'Recurring',
+                event.recurringFrequency ?? 'Recurring',
+              ),
+            if (event.description != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Description',
+                style: AppTypography.h5.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(event.description!, style: AppTypography.bodyMedium),
+            ],
+            const SizedBox(height: 32),
+            if (event.status == EventStatus.upcoming)
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _markCompleted(context),
+                      icon: const Icon(Icons.check),
+                      label: const Text('Mark as Completed'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _markCancelled(context),
+                      icon: const Icon(Icons.cancel),
+                      label: const Text('Mark as Cancelled'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: AppColors.gray),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.gray,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(value, style: AppTypography.bodyLarge),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _markCompleted(BuildContext context) {
+    final cubit = context.read<EventsCubit>();
+    cubit.markCompleted(event.id);
+    Navigator.pop(context);
+  }
+
+  void _markCancelled(BuildContext context) {
+    final cubit = context.read<EventsCubit>();
+    cubit.markCancelled(event.id);
+    Navigator.pop(context);
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    // Capture cubit reference before showing dialog
+    final cubit = context.read<EventsCubit>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Event'),
+        content: const Text('Are you sure you want to delete this event?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              cubit.deleteEvent(event.id);
+              Navigator.pop(dialogContext); // Close dialog
+              Navigator.pop(context); // Close detail screen
+            },
+            child: Text('Delete', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+}

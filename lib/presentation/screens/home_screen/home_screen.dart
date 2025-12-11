@@ -4,9 +4,11 @@ import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_strings.dart';
 import 'package:vnote/core/constants/app_typography.dart';
 import 'package:vnote/core/di/di.dart';
+import 'package:vnote/presentation/cubit/events/events_cubit.dart';
 import 'package:vnote/presentation/cubit/notes/notes_cubit.dart';
 import 'package:vnote/presentation/cubit/notes/notes_state.dart';
 import 'package:vnote/presentation/cubit/payments/payments_cubit.dart';
+import 'package:vnote/presentation/screens/events/events_screen.dart';
 import 'package:vnote/presentation/screens/home_screen/widgets/feature_card.dart';
 import 'package:vnote/presentation/screens/notes/notes_screen.dart';
 import 'package:vnote/presentation/screens/payments/payments_screen.dart';
@@ -45,9 +47,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToEvents() {
-    // TODO: Navigate to events screen when implemented
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Events feature coming soon!')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlocProvider(
+          create: (context) => getIt<EventsCubit>(),
+          child: const EventsScreen(),
+        ),
+      ),
     );
   }
 

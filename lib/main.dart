@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vnote/core/di/di.dart';
 import 'package:vnote/core/theme/app_theme.dart';
+import 'package:vnote/data/models/event_model.dart';
 import 'package:vnote/data/models/note_model.dart';
 import 'package:vnote/data/models/payment_model.dart';
 import 'package:vnote/presentation/cubit/notes/notes_cubit.dart';
@@ -17,10 +18,12 @@ void main() async {
   // Register Hive Adapters
   Hive.registerAdapter(NoteModelAdapter());
   Hive.registerAdapter(PaymentModelAdapter());
+  Hive.registerAdapter(EventModelAdapter());
 
   // Open Hive Boxes
   await Hive.openBox<NoteModel>('notes_box');
   await Hive.openBox<PaymentModel>('payments_box');
+  await Hive.openBox<EventModel>('events_box');
 
   // Configure Dependency Injection
   configureDependencies();

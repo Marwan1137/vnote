@@ -8,7 +8,7 @@ import 'package:vnote/core/constants/app_typography.dart';
 import 'package:vnote/presentation/cubit/recording/recording_cubit.dart';
 import 'package:vnote/presentation/cubit/recording/recording_state.dart';
 
-enum RecordingMode { note, payment }
+enum RecordingMode { note, payment, event }
 
 class RecordingScreen extends StatefulWidget {
   final RecordingMode mode;
@@ -75,8 +75,8 @@ class _RecordingScreenContent extends StatelessWidget {
       body: BlocConsumer<RecordingCubit, RecordingState>(
         listener: (context, state) {
           if (state is RecordingProcessed) {
-            if (mode == RecordingMode.payment) {
-              // For payments, return the transcription string
+            if (mode == RecordingMode.payment || mode == RecordingMode.event) {
+              // For payments and events, return the transcription string
               Navigator.pop(context, state.transcription);
             } else {
               // For notes, return true to indicate note was created
@@ -130,18 +130,23 @@ class _RecordingScreenContent extends StatelessWidget {
           if (state is RecordingProcessing) {
             final message = mode == RecordingMode.payment
                 ? 'Processing payment...'
+                : mode == RecordingMode.event
+                ? 'Processing event...'
                 : AppStrings.generatingNote;
             return _buildProcessingState(context, message);
           }
 
           if (state is RecordingFormatSelection) {
-            // For payments, skip format selection and return transcription directly
-            if (mode == RecordingMode.payment) {
-              // Return transcription immediately for payments
+            // For payments and events, skip format selection and return transcription directly
+            if (mode == RecordingMode.payment || mode == RecordingMode.event) {
+              // Return transcription immediately for payments and events
+              final message = mode == RecordingMode.payment
+                  ? 'Processing payment...'
+                  : 'Processing event...';
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 Navigator.pop(context, state.transcription);
               });
-              return _buildProcessingState(context, 'Processing payment...');
+              return _buildProcessingState(context, message);
             }
             return _buildFormatSelectionState(context, state);
           }

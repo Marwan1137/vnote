@@ -4,7 +4,7 @@ import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
 import '../../domain/entities/payment.dart';
 import '../../domain/repositories/payments_repository.dart';
-import '../datasources/payments_local_datasource.dart';
+import '../datasources_contracts/payments_local_datasource.dart';
 import '../models/payment_model.dart';
 
 @LazySingleton(as: PaymentsRepository)

@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import '../../../core/errors/failures.dart';
-import '../../../data/datasources/payment_llm_datasource.dart';
+import '../../../data/datasources_contracts/payment_llm_datasource.dart';
 import '../../../domain/entities/processed_payment.dart';
 import '../usecase.dart';
 

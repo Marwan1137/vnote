@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
+import '../../data/models/event_model.dart';
 import '../../data/models/note_model.dart';
 import '../../data/models/payment_model.dart';
 
@@ -12,4 +13,8 @@ abstract class RegisterModule {
   @Named('paymentsBox')
   @lazySingleton
   Box<PaymentModel> get paymentsBox => Hive.box<PaymentModel>('payments_box');
+
+  @Named('eventsBox')
+  @lazySingleton
+  Box<EventModel> get eventsBox => Hive.box<EventModel>('events_box');
 }

@@ -13,30 +13,52 @@ import 'package:hive/hive.dart' as _i979;
 import 'package:injectable/injectable.dart' as _i526;
 
 import '../../data/datasource_impl/audio_local_datasource_impl.dart' as _i171;
+import '../../data/datasource_impl/event_llm_datasource_impl.dart' as _i929;
+import '../../data/datasource_impl/events_local_datasource_impl.dart' as _i828;
 import '../../data/datasource_impl/llm_datasource_impl.dart' as _i934;
 import '../../data/datasource_impl/notes_local_datasource_impl.dart' as _i698;
+import '../../data/datasource_impl/payment_llm_datasource_impl.dart' as _i815;
+import '../../data/datasource_impl/payments_local_datasource_impl.dart' as _i99;
 import '../../data/datasource_impl/transcription_datasource_impl.dart' as _i231;
-import '../../data/datasources/payment_llm_datasource.dart' as _i434;
-import '../../data/datasources/payment_llm_datasource_impl.dart' as _i939;
-import '../../data/datasources/payments_local_datasource.dart' as _i1064;
-import '../../data/datasources/payments_local_datasource_impl.dart' as _i693;
 import '../../data/datasources_contracts/audio_local_datasource.dart' as _i625;
+import '../../data/datasources_contracts/event_llm_datasource.dart' as _i323;
+import '../../data/datasources_contracts/events_local_datasource.dart' as _i147;
 import '../../data/datasources_contracts/llm_datasource.dart' as _i801;
 import '../../data/datasources_contracts/notes_local_datasource.dart' as _i929;
+import '../../data/datasources_contracts/payment_llm_datasource.dart' as _i892;
+import '../../data/datasources_contracts/payments_local_datasource.dart'
+    as _i465;
 import '../../data/datasources_contracts/transcription_datasource.dart'
     as _i217;
+import '../../data/models/event_model.dart' as _i270;
 import '../../data/models/note_model.dart' as _i1073;
 import '../../data/models/payment_model.dart' as _i293;
 import '../../data/repositories/audio_repository_impl.dart' as _i425;
+import '../../data/repositories/events_repository_impl.dart' as _i669;
 import '../../data/repositories/notes_repository_impl.dart' as _i252;
 import '../../data/repositories/payments_repository_impl.dart' as _i156;
 import '../../domain/repositories/audio_repository.dart' as _i276;
+import '../../domain/repositories/events_repository.dart' as _i126;
 import '../../domain/repositories/notes_repository.dart' as _i415;
 import '../../domain/repositories/payments_repository.dart' as _i1037;
 import '../../domain/usecases/check_microphone_permission_usecase.dart'
     as _i636;
 import '../../domain/usecases/create_note_usecase.dart' as _i783;
 import '../../domain/usecases/delete_note_usecase.dart' as _i732;
+import '../../domain/usecases/events/create_event_usecase.dart' as _i603;
+import '../../domain/usecases/events/delete_event_usecase.dart' as _i813;
+import '../../domain/usecases/events/get_all_events_usecase.dart' as _i56;
+import '../../domain/usecases/events/get_event_by_id_usecase.dart' as _i363;
+import '../../domain/usecases/events/get_events_by_date_usecase.dart' as _i428;
+import '../../domain/usecases/events/get_events_by_month_usecase.dart' as _i723;
+import '../../domain/usecases/events/get_upcoming_events_usecase.dart' as _i889;
+import '../../domain/usecases/events/mark_event_cancelled_usecase.dart'
+    as _i906;
+import '../../domain/usecases/events/mark_event_completed_usecase.dart'
+    as _i261;
+import '../../domain/usecases/events/process_event_transcription_usecase.dart'
+    as _i456;
+import '../../domain/usecases/events/update_event_usecase.dart' as _i829;
 import '../../domain/usecases/get_all_notes_usecase.dart' as _i520;
 import '../../domain/usecases/get_favorite_notes_usecase.dart' as _i120;
 import '../../domain/usecases/get_note_by_id_usecase.dart' as _i219;
@@ -61,6 +83,7 @@ import '../../domain/usecases/start_recording_usecase.dart' as _i719;
 import '../../domain/usecases/stop_recording_usecase.dart' as _i949;
 import '../../domain/usecases/transcribe_audio_usecase.dart' as _i820;
 import '../../domain/usecases/update_note_usecase.dart' as _i1050;
+import '../../presentation/cubit/events/events_cubit.dart' as _i761;
 import '../../presentation/cubit/notes/notes_cubit.dart' as _i1073;
 import '../../presentation/cubit/payments/payments_cubit.dart' as _i72;
 import '../../presentation/cubit/recording/recording_cubit.dart' as _i198;
@@ -80,8 +103,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     final registerModule = _$RegisterModule();
     gh.lazySingleton<_i854.OnboardingService>(() => _i854.OnboardingService());
-    gh.lazySingleton<_i434.PaymentLLMDataSource>(
-        () => _i939.PaymentLLMDataSourceImpl());
+    gh.lazySingleton<_i979.Box<_i270.EventModel>>(
+      () => registerModule.eventsBox,
+      instanceName: 'eventsBox',
+    );
     gh.lazySingleton<_i217.TranscriptionDataSource>(
         () => _i231.TranscriptionDataSourceImpl());
     gh.lazySingleton<_i979.Box<_i293.PaymentModel>>(
@@ -90,24 +115,32 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i625.AudioLocalDataSource>(
         () => _i171.AudioLocalDataSourceImpl());
-    gh.lazySingleton<_i1064.PaymentsLocalDataSource>(() =>
-        _i693.PaymentsLocalDataSourceImpl(
+    gh.lazySingleton<_i465.PaymentsLocalDataSource>(() =>
+        _i99.PaymentsLocalDataSourceImpl(
             gh<_i979.Box<_i293.PaymentModel>>(instanceName: 'paymentsBox')));
+    gh.lazySingleton<_i147.EventsLocalDataSource>(() =>
+        _i828.EventsLocalDataSourceImpl(
+            gh<_i979.Box<_i270.EventModel>>(instanceName: 'eventsBox')));
     gh.lazySingleton<_i1037.PaymentsRepository>(() =>
-        _i156.PaymentsRepositoryImpl(gh<_i1064.PaymentsLocalDataSource>()));
+        _i156.PaymentsRepositoryImpl(gh<_i465.PaymentsLocalDataSource>()));
     gh.lazySingleton<_i801.LLMDataSource>(() => _i934.LLMDataSourceImpl());
+    gh.lazySingleton<_i892.PaymentLLMDataSource>(
+        () => _i815.PaymentLLMDataSourceImpl());
     gh.lazySingleton<_i979.Box<_i1073.NoteModel>>(
       () => registerModule.notesBox,
       instanceName: 'notesBox',
     );
+    gh.lazySingleton<_i323.EventLLMDataSource>(
+        () => _i929.EventLLMDataSourceImpl());
+    gh.factory<_i456.ProcessEventTranscriptionUseCase>(() =>
+        _i456.ProcessEventTranscriptionUseCase(gh<_i323.EventLLMDataSource>()));
     gh.lazySingleton<_i276.AudioRepository>(() => _i425.AudioRepositoryImpl(
           gh<_i625.AudioLocalDataSource>(),
           gh<_i217.TranscriptionDataSource>(),
           gh<_i801.LLMDataSource>(),
         ));
-    gh.factory<_i483.ProcessPaymentTranscriptionUseCase>(() =>
-        _i483.ProcessPaymentTranscriptionUseCase(
-            gh<_i434.PaymentLLMDataSource>()));
+    gh.lazySingleton<_i126.EventsRepository>(
+        () => _i669.EventsRepositoryImpl(gh<_i147.EventsLocalDataSource>()));
     gh.factory<_i309.GetAllPaymentsUseCase>(
         () => _i309.GetAllPaymentsUseCase(gh<_i1037.PaymentsRepository>()));
     gh.factory<_i310.GetPaymentsByTypeUseCase>(
@@ -143,16 +176,9 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i1050.UpdateNoteUseCase(gh<_i415.NotesRepository>()));
     gh.factory<_i520.GetAllNotesUseCase>(
         () => _i520.GetAllNotesUseCase(gh<_i415.NotesRepository>()));
-    gh.factory<_i72.PaymentsCubit>(() => _i72.PaymentsCubit(
-          gh<_i309.GetAllPaymentsUseCase>(),
-          gh<_i326.GetPaymentsByMonthUseCase>(),
-          gh<_i310.GetPaymentsByTypeUseCase>(),
-          gh<_i489.CreatePaymentUseCase>(),
-          gh<_i281.UpdatePaymentUseCase>(),
-          gh<_i137.DeletePaymentUseCase>(),
-          gh<_i251.MarkPaymentPaidUseCase>(),
-          gh<_i483.ProcessPaymentTranscriptionUseCase>(),
-        ));
+    gh.factory<_i483.ProcessPaymentTranscriptionUseCase>(() =>
+        _i483.ProcessPaymentTranscriptionUseCase(
+            gh<_i892.PaymentLLMDataSource>()));
     gh.factory<_i949.StopRecordingUseCase>(
         () => _i949.StopRecordingUseCase(gh<_i276.AudioRepository>()));
     gh.factory<_i314.OpenAppSettingsUseCase>(
@@ -167,6 +193,26 @@ extension GetItInjectableX on _i174.GetIt {
         _i685.RequestMicrophonePermissionUseCase(gh<_i276.AudioRepository>()));
     gh.factory<_i636.CheckMicrophonePermissionUseCase>(() =>
         _i636.CheckMicrophonePermissionUseCase(gh<_i276.AudioRepository>()));
+    gh.factory<_i889.GetUpcomingEventsUseCase>(
+        () => _i889.GetUpcomingEventsUseCase(gh<_i126.EventsRepository>()));
+    gh.factory<_i829.UpdateEventUseCase>(
+        () => _i829.UpdateEventUseCase(gh<_i126.EventsRepository>()));
+    gh.factory<_i363.GetEventByIdUseCase>(
+        () => _i363.GetEventByIdUseCase(gh<_i126.EventsRepository>()));
+    gh.factory<_i723.GetEventsByMonthUseCase>(
+        () => _i723.GetEventsByMonthUseCase(gh<_i126.EventsRepository>()));
+    gh.factory<_i261.MarkEventCompletedUseCase>(
+        () => _i261.MarkEventCompletedUseCase(gh<_i126.EventsRepository>()));
+    gh.factory<_i428.GetEventsByDateUseCase>(
+        () => _i428.GetEventsByDateUseCase(gh<_i126.EventsRepository>()));
+    gh.factory<_i56.GetAllEventsUseCase>(
+        () => _i56.GetAllEventsUseCase(gh<_i126.EventsRepository>()));
+    gh.factory<_i813.DeleteEventUseCase>(
+        () => _i813.DeleteEventUseCase(gh<_i126.EventsRepository>()));
+    gh.factory<_i603.CreateEventUseCase>(
+        () => _i603.CreateEventUseCase(gh<_i126.EventsRepository>()));
+    gh.factory<_i906.MarkEventCancelledUseCase>(
+        () => _i906.MarkEventCancelledUseCase(gh<_i126.EventsRepository>()));
     gh.factory<_i1073.NotesCubit>(() => _i1073.NotesCubit(
           gh<_i520.GetAllNotesUseCase>(),
           gh<_i661.SearchNotesUseCase>(),
@@ -183,6 +229,28 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i755.ProcessTranscriptionUseCase>(),
           gh<_i783.CreateNoteUseCase>(),
           gh<_i314.OpenAppSettingsUseCase>(),
+        ));
+    gh.factory<_i72.PaymentsCubit>(() => _i72.PaymentsCubit(
+          gh<_i309.GetAllPaymentsUseCase>(),
+          gh<_i326.GetPaymentsByMonthUseCase>(),
+          gh<_i310.GetPaymentsByTypeUseCase>(),
+          gh<_i489.CreatePaymentUseCase>(),
+          gh<_i281.UpdatePaymentUseCase>(),
+          gh<_i137.DeletePaymentUseCase>(),
+          gh<_i251.MarkPaymentPaidUseCase>(),
+          gh<_i483.ProcessPaymentTranscriptionUseCase>(),
+        ));
+    gh.factory<_i761.EventsCubit>(() => _i761.EventsCubit(
+          gh<_i56.GetAllEventsUseCase>(),
+          gh<_i723.GetEventsByMonthUseCase>(),
+          gh<_i428.GetEventsByDateUseCase>(),
+          gh<_i889.GetUpcomingEventsUseCase>(),
+          gh<_i603.CreateEventUseCase>(),
+          gh<_i829.UpdateEventUseCase>(),
+          gh<_i813.DeleteEventUseCase>(),
+          gh<_i261.MarkEventCompletedUseCase>(),
+          gh<_i906.MarkEventCancelledUseCase>(),
+          gh<_i456.ProcessEventTranscriptionUseCase>(),
         ));
     return this;
   }

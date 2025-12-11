@@ -3,7 +3,7 @@ import 'package:injectable/injectable.dart';
 import '../../core/errors/exceptions.dart';
 import '../../domain/entities/payment.dart';
 import '../models/payment_model.dart';
-import 'payments_local_datasource.dart';
+import '../datasources_contracts/payments_local_datasource.dart';
 
 @LazySingleton(as: PaymentsLocalDataSource)
 class PaymentsLocalDataSourceImpl implements PaymentsLocalDataSource {

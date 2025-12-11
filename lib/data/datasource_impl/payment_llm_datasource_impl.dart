@@ -7,7 +7,7 @@ import '../../core/constants/payment_categories.dart';
 import '../../core/errors/exceptions.dart';
 import '../../domain/entities/payment.dart';
 import '../../domain/entities/processed_payment.dart';
-import 'payment_llm_datasource.dart';
+import '../datasources_contracts/payment_llm_datasource.dart';
 
 @LazySingleton(as: PaymentLLMDataSource)
 class PaymentLLMDataSourceImpl implements PaymentLLMDataSource {
