@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../domain/entities/event.dart';
 import '../../../domain/usecases/events/create_event_usecase.dart';
 import '../../../domain/usecases/events/delete_event_usecase.dart';
@@ -26,6 +27,7 @@ class EventsCubit extends Cubit<EventsState> {
   final MarkEventCompletedUseCase markEventCompletedUseCase;
   final MarkEventCancelledUseCase markEventCancelledUseCase;
   final ProcessEventTranscriptionUseCase processEventTranscriptionUseCase;
+  final AuthService authService;
 
   EventsCubit(
     this.getAllEventsUseCase,
@@ -38,6 +40,7 @@ class EventsCubit extends Cubit<EventsState> {
     this.markEventCompletedUseCase,
     this.markEventCancelledUseCase,
     this.processEventTranscriptionUseCase,
+    this.authService,
   ) : super(EventsInitial());
 
   Future<void> loadEvents() async {
@@ -298,12 +301,14 @@ class EventsCubit extends Cubit<EventsState> {
       (processedEvents) async {
         // Create all events simultaneously for better performance
         final now = DateTime.now();
+        final userId = await authService.getCurrentUserId();
         final baseTimestamp = now.millisecondsSinceEpoch;
         final eventsToCreate = processedEvents.asMap().entries.map((entry) {
           final index = entry.key;
           final processed = entry.value;
           return Event(
             id: '${baseTimestamp}_$index',
+            userId: userId,
             title: processed.title,
             description: null,
             dateTime: processed.dateTime,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../domain/entities/note.dart';
 import '../../../domain/entities/processed_note.dart';
 import '../../../domain/entities/recording.dart';
@@ -26,6 +27,7 @@ class RecordingCubit extends Cubit<RecordingState> {
   final ProcessTranscriptionUseCase processTranscriptionUseCase;
   final CreateNoteUseCase createNoteUseCase;
   final OpenAppSettingsUseCase openAppSettingsUseCase;
+  final AuthService authService;
   Timer? _durationTimer;
   DateTime? _recordingStartTime;
   String? _currentRecordingPath;
@@ -39,6 +41,7 @@ class RecordingCubit extends Cubit<RecordingState> {
     this.processTranscriptionUseCase,
     this.createNoteUseCase,
     this.openAppSettingsUseCase,
+    this.authService,
   ) : super(RecordingInitial());
 
   Future<void> checkPermission() async {
@@ -208,8 +211,10 @@ class RecordingCubit extends Cubit<RecordingState> {
 
   Future<void> _createBasicNote(recording, String? transcription) async {
     final now = DateTime.now();
+    final userId = await authService.getCurrentUserId();
     final note = Note(
       id: recording.id,
+      userId: userId,
       title: 'Voice Note',
       content: transcription ?? 'Recording completed',
       audioPath: recording.audioPath,
@@ -390,6 +395,7 @@ class RecordingCubit extends Cubit<RecordingState> {
     required bool useBulletPoints,
   }) async {
     final now = DateTime.now();
+    final userId = await authService.getCurrentUserId();
 
     // Choose content format based on user selection
     final content = useBulletPoints
@@ -402,6 +408,7 @@ class RecordingCubit extends Cubit<RecordingState> {
 
     final note = Note(
       id: recording.id,
+      userId: userId,
       title: processedNote.title,
       content: content,
       summary: processedNote.summary,

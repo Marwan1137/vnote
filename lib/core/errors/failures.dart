@@ -93,3 +93,8 @@ class ValidationFailure extends Failure {
 class InvalidInputFailure extends Failure {
   const InvalidInputFailure([super.message = 'Invalid input provided']);
 }
+
+// Authentication failures
+class AuthFailure extends Failure {
+  const AuthFailure([super.message = 'Authentication failed']);
+}

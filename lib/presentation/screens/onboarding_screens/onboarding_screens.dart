@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:vnote/core/di/di.dart';
 import 'package:vnote/core/services/onboarding_service.dart';
+import 'package:vnote/presentation/auth/screens/sign_in_screen.dart';
 import 'package:vnote/presentation/screens/permission/permission_screen.dart';
 import 'package:vnote/presentation/screens/onboarding_screens/widgets/gradient_icon_box.dart';
 import 'package:vnote/core/constants/app_colors.dart';
@@ -160,7 +161,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const PermissionScreen(),
+                          builder: (context) => const SignInScreen(),
                         ),
                       );
                     }

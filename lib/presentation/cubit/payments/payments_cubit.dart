@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../domain/entities/payment.dart';
 import '../../../domain/usecases/payments/create_payment_usecase.dart';
 import '../../../domain/usecases/payments/delete_payment_usecase.dart';
@@ -22,6 +23,7 @@ class PaymentsCubit extends Cubit<PaymentsState> {
   final DeletePaymentUseCase deletePaymentUseCase;
   final MarkPaymentPaidUseCase markPaymentPaidUseCase;
   final ProcessPaymentTranscriptionUseCase processPaymentTranscriptionUseCase;
+  final AuthService authService;
 
   PaymentsCubit(
     this.getAllPaymentsUseCase,
@@ -32,6 +34,7 @@ class PaymentsCubit extends Cubit<PaymentsState> {
     this.deletePaymentUseCase,
     this.markPaymentPaidUseCase,
     this.processPaymentTranscriptionUseCase,
+    this.authService,
   ) : super(PaymentsInitial());
 
   Future<void> loadPayments() async {
@@ -207,12 +210,14 @@ class PaymentsCubit extends Cubit<PaymentsState> {
       (processedPayments) async {
         // Create all payments simultaneously for better performance
         final now = DateTime.now();
+        final userId = await authService.getCurrentUserId();
         final baseTimestamp = now.millisecondsSinceEpoch;
         final paymentsToCreate = processedPayments.asMap().entries.map((entry) {
           final index = entry.key;
           final processed = entry.value;
           return Payment(
             id: '${baseTimestamp}_$index',
+            userId: userId,
             title: processed.title,
             amount: processed.amount,
             currency: processed.currency,

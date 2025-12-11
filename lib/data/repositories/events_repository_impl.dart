@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
+import '../../core/services/auth_service.dart';
 import '../../domain/entities/event.dart';
 import '../../domain/entities/processed_event.dart';
 import '../../domain/repositories/events_repository.dart';
@@ -11,13 +12,15 @@ import '../models/event_model.dart';
 @LazySingleton(as: EventsRepository)
 class EventsRepositoryImpl implements EventsRepository {
   final EventsLocalDataSource localDataSource;
+  final AuthService authService;
 
-  EventsRepositoryImpl(this.localDataSource);
+  EventsRepositoryImpl(this.localDataSource, this.authService);
 
   @override
   Future<Either<Failure, List<Event>>> getAllEvents() async {
     try {
-      final models = await localDataSource.getAllEvents();
+      final userId = await authService.getCurrentUserId();
+      final models = await localDataSource.getAllEvents(userId);
       final events = models.map((model) => model.toEntity()).toList();
       return Right(events);
     } on CacheException catch (e) {
@@ -30,7 +33,8 @@ class EventsRepositoryImpl implements EventsRepository {
   @override
   Future<Either<Failure, Event>> getEventById(String id) async {
     try {
-      final model = await localDataSource.getEventById(id);
+      final userId = await authService.getCurrentUserId();
+      final model = await localDataSource.getEventById(id, userId);
       if (model == null) {
         return Left(CacheFailure('Event not found'));
       }
@@ -45,7 +49,8 @@ class EventsRepositoryImpl implements EventsRepository {
   @override
   Future<Either<Failure, List<Event>>> getEventsByDate(DateTime date) async {
     try {
-      final models = await localDataSource.getEventsByDate(date);
+      final userId = await authService.getCurrentUserId();
+      final models = await localDataSource.getEventsByDate(date, userId);
       final events = models.map((model) => model.toEntity()).toList();
       return Right(events);
     } on CacheException catch (e) {
@@ -61,7 +66,12 @@ class EventsRepositoryImpl implements EventsRepository {
     int month,
   ) async {
     try {
-      final models = await localDataSource.getEventsByMonth(year, month);
+      final userId = await authService.getCurrentUserId();
+      final models = await localDataSource.getEventsByMonth(
+        year,
+        month,
+        userId,
+      );
       final events = models.map((model) => model.toEntity()).toList();
       return Right(events);
     } on CacheException catch (e) {
@@ -74,7 +84,8 @@ class EventsRepositoryImpl implements EventsRepository {
   @override
   Future<Either<Failure, List<Event>>> getUpcomingEvents() async {
     try {
-      final models = await localDataSource.getUpcomingEvents();
+      final userId = await authService.getCurrentUserId();
+      final models = await localDataSource.getUpcomingEvents(userId);
       final events = models.map((model) => model.toEntity()).toList();
       return Right(events);
     } on CacheException catch (e) {
@@ -113,7 +124,8 @@ class EventsRepositoryImpl implements EventsRepository {
   @override
   Future<Either<Failure, void>> deleteEvent(String id) async {
     try {
-      await localDataSource.deleteEvent(id);
+      final userId = await authService.getCurrentUserId();
+      await localDataSource.deleteEvent(id, userId);
       return const Right(null);
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
@@ -125,7 +137,8 @@ class EventsRepositoryImpl implements EventsRepository {
   @override
   Future<Either<Failure, Event>> markEventCompleted(String id) async {
     try {
-      final model = await localDataSource.getEventById(id);
+      final userId = await authService.getCurrentUserId();
+      final model = await localDataSource.getEventById(id, userId);
       if (model == null) {
         return Left(CacheFailure('Event not found'));
       }
@@ -147,7 +160,8 @@ class EventsRepositoryImpl implements EventsRepository {
   @override
   Future<Either<Failure, Event>> markEventCancelled(String id) async {
     try {
-      final model = await localDataSource.getEventById(id);
+      final userId = await authService.getCurrentUserId();
+      final model = await localDataSource.getEventById(id, userId);
       if (model == null) {
         return Left(CacheFailure('Event not found'));
       }

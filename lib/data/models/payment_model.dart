@@ -50,8 +50,12 @@ class PaymentModel {
   @HiveField(14)
   final String? notes;
 
+  @HiveField(15)
+  final String userId;
+
   const PaymentModel({
     required this.id,
+    required this.userId,
     required this.title,
     required this.amount,
     required this.currency,
@@ -71,6 +75,7 @@ class PaymentModel {
   factory PaymentModel.fromEntity(Payment payment) {
     return PaymentModel(
       id: payment.id,
+      userId: payment.userId,
       title: payment.title,
       amount: payment.amount,
       currency: payment.currency,
@@ -97,6 +102,7 @@ class PaymentModel {
   Payment toEntity() {
     return Payment(
       id: id,
+      userId: userId,
       title: title,
       amount: amount,
       currency: currency,
@@ -123,6 +129,9 @@ class PaymentModel {
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
     return PaymentModel(
       id: json['id'] as String,
+      userId:
+          json['userId'] as String? ??
+          '', // Default to empty for backward compatibility
       title: json['title'] as String,
       amount: (json['amount'] as num).toDouble(),
       currency: json['currency'] as String,
@@ -149,6 +158,7 @@ class PaymentModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'userId': userId,
       'title': title,
       'amount': amount,
       'currency': currency,
@@ -168,6 +178,7 @@ class PaymentModel {
 
   PaymentModel copyWith({
     String? id,
+    String? userId,
     String? title,
     double? amount,
     String? currency,
@@ -185,6 +196,7 @@ class PaymentModel {
   }) {
     return PaymentModel(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       title: title ?? this.title,
       amount: amount ?? this.amount,
       currency: currency ?? this.currency,

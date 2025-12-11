@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -6,11 +9,52 @@ import 'package:vnote/core/theme/app_theme.dart';
 import 'package:vnote/data/models/event_model.dart';
 import 'package:vnote/data/models/note_model.dart';
 import 'package:vnote/data/models/payment_model.dart';
+import 'package:vnote/firebase_options.dart';
+import 'package:vnote/presentation/auth/cubit/auth_cubit.dart';
 import 'package:vnote/presentation/cubit/notes/notes_cubit.dart';
 import 'package:vnote/presentation/screens/splash_screen/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Set up global error handlers
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint('═══════════════════════════════════════════════════════════');
+    debugPrint('FLUTTER ERROR CAUGHT');
+    debugPrint('═══════════════════════════════════════════════════════════');
+    debugPrint('Exception: ${details.exception}');
+    debugPrint('Library: ${details.library}');
+    debugPrint('Stack: ${details.stack}');
+    debugPrint('═══════════════════════════════════════════════════════════');
+  };
+
+  // Handle errors from async operations (if available)
+  try {
+    PlatformDispatcher.instance.onError = (error, stack) {
+      debugPrint('═══════════════════════════════════════════════════════════');
+      debugPrint('ASYNC ERROR CAUGHT');
+      debugPrint('═══════════════════════════════════════════════════════════');
+      debugPrint('Error: $error');
+      debugPrint('Stack: $stack');
+      debugPrint('═══════════════════════════════════════════════════════════');
+      return true;
+    };
+  } catch (e) {
+    debugPrint('Could not set PlatformDispatcher.onError: $e');
+  }
+
+  try {
+    // Initialize Firebase (only if not already initialized)
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } else {}
+  } catch (e) {
+    // Continue with app initialization even if Firebase fails
+    // This allows the app to run in development without Firebase
+  }
 
   // Initialize Hive
   await Hive.initFlutter();
@@ -36,8 +80,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => getIt<NotesCubit>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => getIt<NotesCubit>()),
+        BlocProvider(create: (context) => getIt<AuthCubit>()),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'VNote',

@@ -18,6 +18,7 @@ class NoteModelAdapter extends TypeAdapter<NoteModel> {
     };
     return NoteModel(
       id: fields[0] as String,
+      userId: fields[12] as String,
       title: fields[1] as String,
       content: fields[2] as String,
       summary: fields[3] as String?,
@@ -35,7 +36,7 @@ class NoteModelAdapter extends TypeAdapter<NoteModel> {
   @override
   void write(BinaryWriter writer, NoteModel obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class NoteModelAdapter extends TypeAdapter<NoteModel> {
       ..writeByte(10)
       ..write(obj.isFavorite)
       ..writeByte(11)
-      ..write(obj.wordCount);
+      ..write(obj.wordCount)
+      ..writeByte(12)
+      ..write(obj.userId);
   }
 
   @override

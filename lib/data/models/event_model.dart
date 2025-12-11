@@ -50,8 +50,12 @@ class EventModel {
   @HiveField(13)
   final int color; // Color value as int
 
+  @HiveField(14)
+  final String userId;
+
   const EventModel({
     required this.id,
+    required this.userId,
     required this.title,
     this.description,
     required this.dateTime,
@@ -70,6 +74,7 @@ class EventModel {
   factory EventModel.fromEntity(Event event) {
     return EventModel(
       id: event.id,
+      userId: event.userId,
       title: event.title,
       description: event.description,
       dateTime: event.dateTime,
@@ -93,6 +98,7 @@ class EventModel {
   Event toEntity() {
     return Event(
       id: id,
+      userId: userId,
       title: title,
       description: description,
       dateTime: dateTime,
@@ -115,6 +121,7 @@ class EventModel {
 
   EventModel copyWith({
     String? id,
+    String? userId,
     String? title,
     String? description,
     DateTime? dateTime,
@@ -131,6 +138,7 @@ class EventModel {
   }) {
     return EventModel(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       title: title ?? this.title,
       description: description ?? this.description,
       dateTime: dateTime ?? this.dateTime,

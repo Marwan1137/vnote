@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
+import '../../core/services/auth_service.dart';
 import '../../domain/entities/payment.dart';
 import '../../domain/repositories/payments_repository.dart';
 import '../datasources_contracts/payments_local_datasource.dart';
@@ -10,13 +11,15 @@ import '../models/payment_model.dart';
 @LazySingleton(as: PaymentsRepository)
 class PaymentsRepositoryImpl implements PaymentsRepository {
   final PaymentsLocalDataSource localDataSource;
+  final AuthService authService;
 
-  PaymentsRepositoryImpl(this.localDataSource);
+  PaymentsRepositoryImpl(this.localDataSource, this.authService);
 
   @override
   Future<Either<Failure, List<Payment>>> getAllPayments() async {
     try {
-      final models = await localDataSource.getAllPayments();
+      final userId = await authService.getCurrentUserId();
+      final models = await localDataSource.getAllPayments(userId);
       final payments = models.map((model) => model.toEntity()).toList();
       return Right(payments);
     } on CacheException catch (e) {
@@ -29,7 +32,8 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
   @override
   Future<Either<Failure, Payment>> getPaymentById(String id) async {
     try {
-      final model = await localDataSource.getPaymentById(id);
+      final userId = await authService.getCurrentUserId();
+      final model = await localDataSource.getPaymentById(id, userId);
       if (model == null) {
         return Left(CacheFailure('Payment not found'));
       }
@@ -70,7 +74,8 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
   @override
   Future<Either<Failure, void>> deletePayment(String id) async {
     try {
-      await localDataSource.deletePayment(id);
+      final userId = await authService.getCurrentUserId();
+      await localDataSource.deletePayment(id, userId);
       return const Right(null);
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
@@ -85,7 +90,12 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
     int month,
   ) async {
     try {
-      final models = await localDataSource.getPaymentsByMonth(year, month);
+      final userId = await authService.getCurrentUserId();
+      final models = await localDataSource.getPaymentsByMonth(
+        year,
+        month,
+        userId,
+      );
       final payments = models.map((model) => model.toEntity()).toList();
       return Right(payments);
     } on CacheException catch (e) {
@@ -100,7 +110,8 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
     PaymentType type,
   ) async {
     try {
-      final models = await localDataSource.getPaymentsByType(type);
+      final userId = await authService.getCurrentUserId();
+      final models = await localDataSource.getPaymentsByType(type, userId);
       final payments = models.map((model) => model.toEntity()).toList();
       return Right(payments);
     } on CacheException catch (e) {
@@ -113,7 +124,8 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
   @override
   Future<Either<Failure, Payment>> markPaymentPaid(String id) async {
     try {
-      final model = await localDataSource.getPaymentById(id);
+      final userId = await authService.getCurrentUserId();
+      final model = await localDataSource.getPaymentById(id, userId);
       if (model == null) {
         return Left(CacheFailure('Payment not found'));
       }

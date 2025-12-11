@@ -58,60 +58,64 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text(
-            '${AppStrings.appFirstName} ${AppStrings.appSecondName}',
-            style: AppTypography.h3.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: AppTypography.bold,
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Text(
+              '${AppStrings.appFirstName} ${AppStrings.appSecondName}',
+              style: AppTypography.h3.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: AppTypography.bold,
+              ),
             ),
           ),
         ),
-      ),
-      body: BlocBuilder<NotesCubit, NotesState>(
-        builder: (context, state) {
-          String notesCount = '0';
-          if (state is NotesLoaded) {
-            notesCount = state.notes.length.toString();
-          } else if (state is NotesEmpty) {
-            notesCount = '0';
-          }
+        body: BlocBuilder<NotesCubit, NotesState>(
+          builder: (context, state) {
+            String notesCount = '0';
+            if (state is NotesLoaded) {
+              notesCount = state.notes.length.toString();
+            } else if (state is NotesEmpty) {
+              notesCount = '0';
+            }
 
-          return Column(
-            children: [
-              Expanded(
-                child: FeatureCard(
-                  title: 'Notes',
-                  subtitle: 'Speak your thoughts, we write them down',
-                  icon: Icons.note,
-                  color: AppColors.purple,
-                  onTap: _navigateToNotes,
-                  count: notesCount,
+            return Column(
+              children: [
+                Expanded(
+                  child: FeatureCard(
+                    title: 'Notes',
+                    subtitle: 'Speak your thoughts, we write them down',
+                    icon: Icons.note,
+                    color: AppColors.purple,
+                    onTap: _navigateToNotes,
+                    count: notesCount,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: FeatureCard(
-                  title: 'Payments',
-                  subtitle: 'Voice-controlled payments made simple',
-                  icon: Icons.payment,
-                  color: AppColors.red,
-                  onTap: _navigateToPayments,
+                Expanded(
+                  child: FeatureCard(
+                    title: 'Payments',
+                    subtitle: 'Voice-controlled payments made simple',
+                    icon: Icons.payment,
+                    color: AppColors.red,
+                    onTap: _navigateToPayments,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: FeatureCard(
-                  title: 'Events',
-                  subtitle: 'Never miss a moment, stay organized',
-                  icon: Icons.event,
-                  color: AppColors.green,
-                  onTap: _navigateToEvents,
+                Expanded(
+                  child: FeatureCard(
+                    title: 'Events',
+                    subtitle: 'Never miss a moment, stay organized',
+                    icon: Icons.event,
+                    color: AppColors.green,
+                    onTap: _navigateToEvents,
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }

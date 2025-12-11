@@ -104,6 +104,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       final now = DateTime.now();
       final payment = Payment(
         id: widget.payment.id,
+        userId: widget.payment.userId,
         title: _titleController.text.trim(),
         amount: double.parse(_amountController.text),
         currency: _selectedCurrency,

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
 import '../../data/models/event_model.dart';
@@ -17,4 +18,7 @@ abstract class RegisterModule {
   @Named('eventsBox')
   @lazySingleton
   Box<EventModel> get eventsBox => Hive.box<EventModel>('events_box');
+
+  @lazySingleton
+  FirebaseAuth get firebaseAuth => FirebaseAuth.instance;
 }

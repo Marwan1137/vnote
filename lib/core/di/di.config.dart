@@ -8,10 +8,14 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:hive/hive.dart' as _i979;
 import 'package:injectable/injectable.dart' as _i526;
 
+import '../../data/auth/datasources/auth_remote_datasource.dart' as _i691;
+import '../../data/auth/datasources/auth_remote_datasource_impl.dart' as _i364;
+import '../../data/auth/repositories/auth_repository_impl.dart' as _i388;
 import '../../data/datasource_impl/audio_local_datasource_impl.dart' as _i171;
 import '../../data/datasource_impl/event_llm_datasource_impl.dart' as _i929;
 import '../../data/datasource_impl/events_local_datasource_impl.dart' as _i828;
@@ -83,10 +87,25 @@ import '../../domain/usecases/start_recording_usecase.dart' as _i719;
 import '../../domain/usecases/stop_recording_usecase.dart' as _i949;
 import '../../domain/usecases/transcribe_audio_usecase.dart' as _i820;
 import '../../domain/usecases/update_note_usecase.dart' as _i1050;
+import '../../presentation/auth/cubit/auth_cubit.dart' as _i1063;
 import '../../presentation/cubit/events/events_cubit.dart' as _i761;
 import '../../presentation/cubit/notes/notes_cubit.dart' as _i1073;
 import '../../presentation/cubit/payments/payments_cubit.dart' as _i72;
 import '../../presentation/cubit/recording/recording_cubit.dart' as _i198;
+import '../auth/repositories/auth_repository.dart' as _i964;
+import '../auth/usecases/check_email_verification_usecase.dart' as _i339;
+import '../auth/usecases/get_current_user_usecase.dart' as _i936;
+import '../auth/usecases/is_email_registered_usecase.dart' as _i382;
+import '../auth/usecases/reload_user_usecase.dart' as _i207;
+import '../auth/usecases/reset_password_usecase.dart' as _i388;
+import '../auth/usecases/send_email_verification_usecase.dart' as _i352;
+import '../auth/usecases/send_password_reset_usecase.dart' as _i880;
+import '../auth/usecases/sign_in_usecase.dart' as _i136;
+import '../auth/usecases/sign_out_usecase.dart' as _i185;
+import '../auth/usecases/sign_up_usecase.dart' as _i819;
+import '../auth/usecases/verify_otp_usecase.dart' as _i896;
+import '../services/auth_service.dart' as _i745;
+import '../services/data_migration_service.dart' as _i223;
 import '../services/onboarding_service.dart' as _i854;
 import 'register_module.dart' as _i291;
 
@@ -102,6 +121,7 @@ extension GetItInjectableX on _i174.GetIt {
       environmentFilter,
     );
     final registerModule = _$RegisterModule();
+    gh.lazySingleton<_i59.FirebaseAuth>(() => registerModule.firebaseAuth);
     gh.lazySingleton<_i854.OnboardingService>(() => _i854.OnboardingService());
     gh.lazySingleton<_i979.Box<_i270.EventModel>>(
       () => registerModule.eventsBox,
@@ -121,8 +141,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i147.EventsLocalDataSource>(() =>
         _i828.EventsLocalDataSourceImpl(
             gh<_i979.Box<_i270.EventModel>>(instanceName: 'eventsBox')));
-    gh.lazySingleton<_i1037.PaymentsRepository>(() =>
-        _i156.PaymentsRepositoryImpl(gh<_i465.PaymentsLocalDataSource>()));
     gh.lazySingleton<_i801.LLMDataSource>(() => _i934.LLMDataSourceImpl());
     gh.lazySingleton<_i892.PaymentLLMDataSource>(
         () => _i815.PaymentLLMDataSourceImpl());
@@ -139,43 +157,13 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i217.TranscriptionDataSource>(),
           gh<_i801.LLMDataSource>(),
         ));
-    gh.lazySingleton<_i126.EventsRepository>(
-        () => _i669.EventsRepositoryImpl(gh<_i147.EventsLocalDataSource>()));
-    gh.factory<_i309.GetAllPaymentsUseCase>(
-        () => _i309.GetAllPaymentsUseCase(gh<_i1037.PaymentsRepository>()));
-    gh.factory<_i310.GetPaymentsByTypeUseCase>(
-        () => _i310.GetPaymentsByTypeUseCase(gh<_i1037.PaymentsRepository>()));
-    gh.factory<_i798.GetPaymentByIdUseCase>(
-        () => _i798.GetPaymentByIdUseCase(gh<_i1037.PaymentsRepository>()));
-    gh.factory<_i326.GetPaymentsByMonthUseCase>(
-        () => _i326.GetPaymentsByMonthUseCase(gh<_i1037.PaymentsRepository>()));
-    gh.factory<_i137.DeletePaymentUseCase>(
-        () => _i137.DeletePaymentUseCase(gh<_i1037.PaymentsRepository>()));
-    gh.factory<_i251.MarkPaymentPaidUseCase>(
-        () => _i251.MarkPaymentPaidUseCase(gh<_i1037.PaymentsRepository>()));
-    gh.factory<_i281.UpdatePaymentUseCase>(
-        () => _i281.UpdatePaymentUseCase(gh<_i1037.PaymentsRepository>()));
-    gh.factory<_i489.CreatePaymentUseCase>(
-        () => _i489.CreatePaymentUseCase(gh<_i1037.PaymentsRepository>()));
+    gh.lazySingleton<_i691.AuthRemoteDataSource>(
+        () => _i364.AuthRemoteDataSourceImpl(gh<_i59.FirebaseAuth>()));
+    gh.lazySingleton<_i964.AuthRepository>(
+        () => _i388.AuthRepositoryImpl(gh<_i691.AuthRemoteDataSource>()));
     gh.lazySingleton<_i929.NotesLocalDataSource>(() =>
         _i698.NotesLocalDataSourceImpl(
             gh<_i979.Box<_i1073.NoteModel>>(instanceName: 'notesBox')));
-    gh.lazySingleton<_i415.NotesRepository>(
-        () => _i252.NotesRepositoryImpl(gh<_i929.NotesLocalDataSource>()));
-    gh.factory<_i783.CreateNoteUseCase>(
-        () => _i783.CreateNoteUseCase(gh<_i415.NotesRepository>()));
-    gh.factory<_i219.GetNoteByIdUseCase>(
-        () => _i219.GetNoteByIdUseCase(gh<_i415.NotesRepository>()));
-    gh.factory<_i732.DeleteNoteUseCase>(
-        () => _i732.DeleteNoteUseCase(gh<_i415.NotesRepository>()));
-    gh.factory<_i120.GetFavoriteNotesUseCase>(
-        () => _i120.GetFavoriteNotesUseCase(gh<_i415.NotesRepository>()));
-    gh.factory<_i661.SearchNotesUseCase>(
-        () => _i661.SearchNotesUseCase(gh<_i415.NotesRepository>()));
-    gh.factory<_i1050.UpdateNoteUseCase>(
-        () => _i1050.UpdateNoteUseCase(gh<_i415.NotesRepository>()));
-    gh.factory<_i520.GetAllNotesUseCase>(
-        () => _i520.GetAllNotesUseCase(gh<_i415.NotesRepository>()));
     gh.factory<_i483.ProcessPaymentTranscriptionUseCase>(() =>
         _i483.ProcessPaymentTranscriptionUseCase(
             gh<_i892.PaymentLLMDataSource>()));
@@ -193,8 +181,114 @@ extension GetItInjectableX on _i174.GetIt {
         _i685.RequestMicrophonePermissionUseCase(gh<_i276.AudioRepository>()));
     gh.factory<_i636.CheckMicrophonePermissionUseCase>(() =>
         _i636.CheckMicrophonePermissionUseCase(gh<_i276.AudioRepository>()));
+    gh.factory<_i382.IsEmailRegisteredUseCase>(
+        () => _i382.IsEmailRegisteredUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i388.ResetPasswordUseCase>(
+        () => _i388.ResetPasswordUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i880.SendPasswordResetUseCase>(
+        () => _i880.SendPasswordResetUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i136.SignInUseCase>(
+        () => _i136.SignInUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i339.CheckEmailVerificationUseCase>(
+        () => _i339.CheckEmailVerificationUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i819.SignUpUseCase>(
+        () => _i819.SignUpUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i352.SendEmailVerificationUseCase>(
+        () => _i352.SendEmailVerificationUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i936.GetCurrentUserUseCase>(
+        () => _i936.GetCurrentUserUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i207.ReloadUserUseCase>(
+        () => _i207.ReloadUserUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i896.VerifyOTPUseCase>(
+        () => _i896.VerifyOTPUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i185.SignOutUseCase>(
+        () => _i185.SignOutUseCase(gh<_i964.AuthRepository>()));
+    gh.lazySingleton<_i745.AuthService>(
+        () => _i745.AuthService(gh<_i936.GetCurrentUserUseCase>()));
+    gh.lazySingleton<_i1037.PaymentsRepository>(
+        () => _i156.PaymentsRepositoryImpl(
+              gh<_i465.PaymentsLocalDataSource>(),
+              gh<_i745.AuthService>(),
+            ));
+    gh.lazySingleton<_i223.DataMigrationService>(
+        () => _i223.DataMigrationService(gh<_i745.AuthService>()));
+    gh.lazySingleton<_i415.NotesRepository>(() => _i252.NotesRepositoryImpl(
+          gh<_i929.NotesLocalDataSource>(),
+          gh<_i745.AuthService>(),
+        ));
+    gh.factory<_i1063.AuthCubit>(() => _i1063.AuthCubit(
+          gh<_i136.SignInUseCase>(),
+          gh<_i819.SignUpUseCase>(),
+          gh<_i185.SignOutUseCase>(),
+          gh<_i880.SendPasswordResetUseCase>(),
+          gh<_i896.VerifyOTPUseCase>(),
+          gh<_i388.ResetPasswordUseCase>(),
+          gh<_i352.SendEmailVerificationUseCase>(),
+          gh<_i339.CheckEmailVerificationUseCase>(),
+          gh<_i936.GetCurrentUserUseCase>(),
+          gh<_i382.IsEmailRegisteredUseCase>(),
+          gh<_i207.ReloadUserUseCase>(),
+        ));
+    gh.lazySingleton<_i126.EventsRepository>(() => _i669.EventsRepositoryImpl(
+          gh<_i147.EventsLocalDataSource>(),
+          gh<_i745.AuthService>(),
+        ));
+    gh.factory<_i309.GetAllPaymentsUseCase>(
+        () => _i309.GetAllPaymentsUseCase(gh<_i1037.PaymentsRepository>()));
+    gh.factory<_i310.GetPaymentsByTypeUseCase>(
+        () => _i310.GetPaymentsByTypeUseCase(gh<_i1037.PaymentsRepository>()));
+    gh.factory<_i798.GetPaymentByIdUseCase>(
+        () => _i798.GetPaymentByIdUseCase(gh<_i1037.PaymentsRepository>()));
+    gh.factory<_i326.GetPaymentsByMonthUseCase>(
+        () => _i326.GetPaymentsByMonthUseCase(gh<_i1037.PaymentsRepository>()));
+    gh.factory<_i137.DeletePaymentUseCase>(
+        () => _i137.DeletePaymentUseCase(gh<_i1037.PaymentsRepository>()));
+    gh.factory<_i251.MarkPaymentPaidUseCase>(
+        () => _i251.MarkPaymentPaidUseCase(gh<_i1037.PaymentsRepository>()));
+    gh.factory<_i281.UpdatePaymentUseCase>(
+        () => _i281.UpdatePaymentUseCase(gh<_i1037.PaymentsRepository>()));
+    gh.factory<_i489.CreatePaymentUseCase>(
+        () => _i489.CreatePaymentUseCase(gh<_i1037.PaymentsRepository>()));
+    gh.factory<_i783.CreateNoteUseCase>(
+        () => _i783.CreateNoteUseCase(gh<_i415.NotesRepository>()));
+    gh.factory<_i219.GetNoteByIdUseCase>(
+        () => _i219.GetNoteByIdUseCase(gh<_i415.NotesRepository>()));
+    gh.factory<_i732.DeleteNoteUseCase>(
+        () => _i732.DeleteNoteUseCase(gh<_i415.NotesRepository>()));
+    gh.factory<_i120.GetFavoriteNotesUseCase>(
+        () => _i120.GetFavoriteNotesUseCase(gh<_i415.NotesRepository>()));
+    gh.factory<_i661.SearchNotesUseCase>(
+        () => _i661.SearchNotesUseCase(gh<_i415.NotesRepository>()));
+    gh.factory<_i1050.UpdateNoteUseCase>(
+        () => _i1050.UpdateNoteUseCase(gh<_i415.NotesRepository>()));
+    gh.factory<_i520.GetAllNotesUseCase>(
+        () => _i520.GetAllNotesUseCase(gh<_i415.NotesRepository>()));
+    gh.factory<_i198.RecordingCubit>(() => _i198.RecordingCubit(
+          gh<_i636.CheckMicrophonePermissionUseCase>(),
+          gh<_i685.RequestMicrophonePermissionUseCase>(),
+          gh<_i719.StartRecordingUseCase>(),
+          gh<_i949.StopRecordingUseCase>(),
+          gh<_i820.TranscribeAudioUseCase>(),
+          gh<_i755.ProcessTranscriptionUseCase>(),
+          gh<_i783.CreateNoteUseCase>(),
+          gh<_i314.OpenAppSettingsUseCase>(),
+          gh<_i745.AuthService>(),
+        ));
+    gh.factory<_i72.PaymentsCubit>(() => _i72.PaymentsCubit(
+          gh<_i309.GetAllPaymentsUseCase>(),
+          gh<_i326.GetPaymentsByMonthUseCase>(),
+          gh<_i310.GetPaymentsByTypeUseCase>(),
+          gh<_i489.CreatePaymentUseCase>(),
+          gh<_i281.UpdatePaymentUseCase>(),
+          gh<_i137.DeletePaymentUseCase>(),
+          gh<_i251.MarkPaymentPaidUseCase>(),
+          gh<_i483.ProcessPaymentTranscriptionUseCase>(),
+          gh<_i745.AuthService>(),
+        ));
     gh.factory<_i889.GetUpcomingEventsUseCase>(
         () => _i889.GetUpcomingEventsUseCase(gh<_i126.EventsRepository>()));
+    gh.factory<_i906.MarkEventCancelledUseCase>(
+        () => _i906.MarkEventCancelledUseCase(gh<_i126.EventsRepository>()));
     gh.factory<_i829.UpdateEventUseCase>(
         () => _i829.UpdateEventUseCase(gh<_i126.EventsRepository>()));
     gh.factory<_i363.GetEventByIdUseCase>(
@@ -211,34 +305,12 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i813.DeleteEventUseCase(gh<_i126.EventsRepository>()));
     gh.factory<_i603.CreateEventUseCase>(
         () => _i603.CreateEventUseCase(gh<_i126.EventsRepository>()));
-    gh.factory<_i906.MarkEventCancelledUseCase>(
-        () => _i906.MarkEventCancelledUseCase(gh<_i126.EventsRepository>()));
     gh.factory<_i1073.NotesCubit>(() => _i1073.NotesCubit(
           gh<_i520.GetAllNotesUseCase>(),
           gh<_i661.SearchNotesUseCase>(),
           gh<_i783.CreateNoteUseCase>(),
           gh<_i1050.UpdateNoteUseCase>(),
           gh<_i732.DeleteNoteUseCase>(),
-        ));
-    gh.factory<_i198.RecordingCubit>(() => _i198.RecordingCubit(
-          gh<_i636.CheckMicrophonePermissionUseCase>(),
-          gh<_i685.RequestMicrophonePermissionUseCase>(),
-          gh<_i719.StartRecordingUseCase>(),
-          gh<_i949.StopRecordingUseCase>(),
-          gh<_i820.TranscribeAudioUseCase>(),
-          gh<_i755.ProcessTranscriptionUseCase>(),
-          gh<_i783.CreateNoteUseCase>(),
-          gh<_i314.OpenAppSettingsUseCase>(),
-        ));
-    gh.factory<_i72.PaymentsCubit>(() => _i72.PaymentsCubit(
-          gh<_i309.GetAllPaymentsUseCase>(),
-          gh<_i326.GetPaymentsByMonthUseCase>(),
-          gh<_i310.GetPaymentsByTypeUseCase>(),
-          gh<_i489.CreatePaymentUseCase>(),
-          gh<_i281.UpdatePaymentUseCase>(),
-          gh<_i137.DeletePaymentUseCase>(),
-          gh<_i251.MarkPaymentPaidUseCase>(),
-          gh<_i483.ProcessPaymentTranscriptionUseCase>(),
         ));
     gh.factory<_i761.EventsCubit>(() => _i761.EventsCubit(
           gh<_i56.GetAllEventsUseCase>(),
@@ -251,6 +323,7 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i261.MarkEventCompletedUseCase>(),
           gh<_i906.MarkEventCancelledUseCase>(),
           gh<_i456.ProcessEventTranscriptionUseCase>(),
+          gh<_i745.AuthService>(),
         ));
     return this;
   }

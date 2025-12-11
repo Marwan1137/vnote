@@ -12,9 +12,11 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
   final Box<NoteModel> notesBox;
 
   @override
-  Future<List<NoteModel>> getAllNotes() async {
+  Future<List<NoteModel>> getAllNotes(String userId) async {
     try {
-      final notes = notesBox.values.toList();
+      final notes = notesBox.values
+          .where((note) => note.userId == userId)
+          .toList();
       notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return notes;
     } catch (e) {
@@ -23,10 +25,10 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
   }
 
   @override
-  Future<NoteModel> getNoteById(String id) async {
+  Future<NoteModel> getNoteById(String id, String userId) async {
     try {
       final note = notesBox.get(id);
-      if (note == null) {
+      if (note == null || note.userId != userId) {
         throw NoteNotFoundException('Note with id $id not found');
       }
       return note;
@@ -61,9 +63,10 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
   }
 
   @override
-  Future<void> deleteNote(String id) async {
+  Future<void> deleteNote(String id, String userId) async {
     try {
-      if (!notesBox.containsKey(id)) {
+      final note = notesBox.get(id);
+      if (note == null || note.userId != userId) {
         throw NoteNotFoundException('Note with id $id not found');
       }
       await notesBox.delete(id);
@@ -74,9 +77,9 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
   }
 
   @override
-  Future<List<NoteModel>> searchNotes(String query) async {
+  Future<List<NoteModel>> searchNotes(String query, String userId) async {
     try {
-      final allNotes = await getAllNotes();
+      final allNotes = await getAllNotes(userId);
       final lowercaseQuery = query.toLowerCase();
 
       return allNotes.where((note) {
@@ -95,9 +98,9 @@ class NotesLocalDataSourceImpl implements NotesLocalDataSource {
   }
 
   @override
-  Future<List<NoteModel>> getFavoriteNotes() async {
+  Future<List<NoteModel>> getFavoriteNotes(String userId) async {
     try {
-      final allNotes = await getAllNotes();
+      final allNotes = await getAllNotes(userId);
       return allNotes.where((note) => note.isFavorite).toList();
     } catch (e) {
       throw DatabaseException('Failed to get favorite notes: $e');

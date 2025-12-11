@@ -18,6 +18,7 @@ class EventModelAdapter extends TypeAdapter<EventModel> {
     };
     return EventModel(
       id: fields[0] as String,
+      userId: fields[14] as String,
       title: fields[1] as String,
       description: fields[2] as String?,
       dateTime: fields[3] as DateTime,
@@ -37,7 +38,7 @@ class EventModelAdapter extends TypeAdapter<EventModel> {
   @override
   void write(BinaryWriter writer, EventModel obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -65,7 +66,9 @@ class EventModelAdapter extends TypeAdapter<EventModel> {
       ..writeByte(12)
       ..write(obj.updatedAt)
       ..writeByte(13)
-      ..write(obj.color);
+      ..write(obj.color)
+      ..writeByte(14)
+      ..write(obj.userId);
   }
 
   @override

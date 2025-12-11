@@ -6,6 +6,7 @@ enum PaymentStatus { due, upcoming, overdue, paid }
 
 class Payment extends Equatable {
   final String id;
+  final String userId;
   final String title;
   final double amount;
   final String currency;
@@ -24,6 +25,7 @@ class Payment extends Equatable {
 
   const Payment({
     required this.id,
+    required this.userId,
     required this.title,
     required this.amount,
     required this.currency,
@@ -42,6 +44,7 @@ class Payment extends Equatable {
 
   Payment copyWith({
     String? id,
+    String? userId,
     String? title,
     double? amount,
     String? currency,
@@ -59,6 +62,7 @@ class Payment extends Equatable {
   }) {
     return Payment(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       title: title ?? this.title,
       amount: amount ?? this.amount,
       currency: currency ?? this.currency,
@@ -79,6 +83,7 @@ class Payment extends Equatable {
   @override
   List<Object?> get props => [
     id,
+    userId,
     title,
     amount,
     currency,

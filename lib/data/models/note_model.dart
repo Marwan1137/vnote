@@ -40,8 +40,12 @@ class NoteModel {
   @HiveField(11)
   final int wordCount;
 
+  @HiveField(12)
+  final String userId;
+
   const NoteModel({
     required this.id,
+    required this.userId,
     required this.title,
     required this.content,
     this.summary,
@@ -58,6 +62,7 @@ class NoteModel {
   factory NoteModel.fromEntity(Note note) {
     return NoteModel(
       id: note.id,
+      userId: note.userId,
       title: note.title,
       content: note.content,
       summary: note.summary,
@@ -76,6 +81,7 @@ class NoteModel {
   Note toEntity() {
     return Note(
       id: id,
+      userId: userId,
       title: title,
       content: content,
       summary: summary,
@@ -93,6 +99,9 @@ class NoteModel {
   factory NoteModel.fromJson(Map<String, dynamic> json) {
     return NoteModel(
       id: json['id'] as String,
+      userId:
+          json['userId'] as String? ??
+          '', // Default to empty for backward compatibility
       title: json['title'] as String,
       content: json['content'] as String,
       summary: json['summary'] as String?,
@@ -112,6 +121,7 @@ class NoteModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'userId': userId,
       'title': title,
       'content': content,
       'summary': summary,
@@ -128,6 +138,7 @@ class NoteModel {
 
   NoteModel copyWith({
     String? id,
+    String? userId,
     String? title,
     String? content,
     String? summary,
@@ -142,6 +153,7 @@ class NoteModel {
   }) {
     return NoteModel(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       title: title ?? this.title,
       content: content ?? this.content,
       summary: summary ?? this.summary,

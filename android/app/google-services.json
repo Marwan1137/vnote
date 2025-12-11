@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "290844758714",
+    "project_id": "voya-cb3ce",
+    "storage_bucket": "voya-cb3ce.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:290844758714:android:b20b8353c61ddefd4ee883",
+        "android_client_info": {
+          "package_name": "com.example.vnote"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCmdQw4ef-zUxLbAjajjWdUyWmrBdzZIc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

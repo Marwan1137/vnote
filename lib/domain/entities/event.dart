@@ -5,6 +5,7 @@ enum EventStatus { upcoming, completed, cancelled }
 
 class Event extends Equatable {
   final String id;
+  final String userId;
   final String title;
   final String? description;
   final DateTime dateTime;
@@ -22,6 +23,7 @@ class Event extends Equatable {
 
   const Event({
     required this.id,
+    required this.userId,
     required this.title,
     this.description,
     required this.dateTime,
@@ -39,6 +41,7 @@ class Event extends Equatable {
 
   Event copyWith({
     String? id,
+    String? userId,
     String? title,
     String? description,
     DateTime? dateTime,
@@ -55,6 +58,7 @@ class Event extends Equatable {
   }) {
     return Event(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       title: title ?? this.title,
       description: description ?? this.description,
       dateTime: dateTime ?? this.dateTime,
@@ -74,6 +78,7 @@ class Event extends Equatable {
   @override
   List<Object?> get props => [
     id,
+    userId,
     title,
     description,
     dateTime,

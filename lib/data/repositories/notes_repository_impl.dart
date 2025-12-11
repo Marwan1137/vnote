@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
+import '../../core/services/auth_service.dart';
 import '../../domain/entities/note.dart';
 import '../../domain/repositories/notes_repository.dart';
 import '../datasources_contracts/notes_local_datasource.dart';
@@ -10,13 +11,15 @@ import '../models/note_model.dart';
 @LazySingleton(as: NotesRepository)
 class NotesRepositoryImpl implements NotesRepository {
   final NotesLocalDataSource localDataSource;
+  final AuthService authService;
 
-  NotesRepositoryImpl(this.localDataSource);
+  NotesRepositoryImpl(this.localDataSource, this.authService);
 
   @override
   Future<Either<Failure, List<Note>>> getAllNotes() async {
     try {
-      final notes = await localDataSource.getAllNotes();
+      final userId = await authService.getCurrentUserId();
+      final notes = await localDataSource.getAllNotes(userId);
       return Right(notes.map((model) => model.toEntity()).toList());
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
@@ -28,7 +31,8 @@ class NotesRepositoryImpl implements NotesRepository {
   @override
   Future<Either<Failure, Note>> getNoteById(String id) async {
     try {
-      final note = await localDataSource.getNoteById(id);
+      final userId = await authService.getCurrentUserId();
+      final note = await localDataSource.getNoteById(id, userId);
       return Right(note.toEntity());
     } on NoteNotFoundException catch (e) {
       return Left(NoteNotFoundFailure(e.message));
@@ -70,7 +74,8 @@ class NotesRepositoryImpl implements NotesRepository {
   @override
   Future<Either<Failure, void>> deleteNote(String id) async {
     try {
-      await localDataSource.deleteNote(id);
+      final userId = await authService.getCurrentUserId();
+      await localDataSource.deleteNote(id, userId);
       return const Right(null);
     } on NoteNotFoundException catch (e) {
       return Left(NoteNotFoundFailure(e.message));
@@ -84,7 +89,8 @@ class NotesRepositoryImpl implements NotesRepository {
   @override
   Future<Either<Failure, List<Note>>> searchNotes(String query) async {
     try {
-      final notes = await localDataSource.searchNotes(query);
+      final userId = await authService.getCurrentUserId();
+      final notes = await localDataSource.searchNotes(query, userId);
       return Right(notes.map((model) => model.toEntity()).toList());
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
@@ -96,7 +102,8 @@ class NotesRepositoryImpl implements NotesRepository {
   @override
   Future<Either<Failure, List<Note>>> getFavoriteNotes() async {
     try {
-      final notes = await localDataSource.getFavoriteNotes();
+      final userId = await authService.getCurrentUserId();
+      final notes = await localDataSource.getFavoriteNotes(userId);
       return Right(notes.map((model) => model.toEntity()).toList());
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));

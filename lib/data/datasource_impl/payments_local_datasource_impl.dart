@@ -13,9 +13,11 @@ class PaymentsLocalDataSourceImpl implements PaymentsLocalDataSource {
   final Box<PaymentModel> paymentsBox;
 
   @override
-  Future<List<PaymentModel>> getAllPayments() async {
+  Future<List<PaymentModel>> getAllPayments(String userId) async {
     try {
-      return paymentsBox.values.toList()
+      return paymentsBox.values
+          .where((payment) => payment.userId == userId)
+          .toList()
         ..sort((a, b) => b.dueDate.compareTo(a.dueDate));
     } catch (e) {
       throw CacheException('Failed to get all payments: $e');
@@ -23,9 +25,13 @@ class PaymentsLocalDataSourceImpl implements PaymentsLocalDataSource {
   }
 
   @override
-  Future<PaymentModel?> getPaymentById(String id) async {
+  Future<PaymentModel?> getPaymentById(String id, String userId) async {
     try {
-      return paymentsBox.get(id);
+      final payment = paymentsBox.get(id);
+      if (payment != null && payment.userId != userId) {
+        return null;
+      }
+      return payment;
     } catch (e) {
       throw CacheException('Failed to get payment by id: $e');
     }
@@ -52,8 +58,12 @@ class PaymentsLocalDataSourceImpl implements PaymentsLocalDataSource {
   }
 
   @override
-  Future<void> deletePayment(String id) async {
+  Future<void> deletePayment(String id, String userId) async {
     try {
+      final payment = paymentsBox.get(id);
+      if (payment != null && payment.userId != userId) {
+        throw CacheException('Payment not found or access denied');
+      }
       await paymentsBox.delete(id);
     } catch (e) {
       throw CacheException('Failed to delete payment: $e');
@@ -61,10 +71,16 @@ class PaymentsLocalDataSourceImpl implements PaymentsLocalDataSource {
   }
 
   @override
-  Future<List<PaymentModel>> getPaymentsByMonth(int year, int month) async {
+  Future<List<PaymentModel>> getPaymentsByMonth(
+    int year,
+    int month,
+    String userId,
+  ) async {
     try {
       return paymentsBox.values.where((payment) {
-        return payment.dueDate.year == year && payment.dueDate.month == month;
+        return payment.userId == userId &&
+            payment.dueDate.year == year &&
+            payment.dueDate.month == month;
       }).toList()..sort((a, b) => b.dueDate.compareTo(a.dueDate));
     } catch (e) {
       throw CacheException('Failed to get payments by month: $e');
@@ -72,11 +88,16 @@ class PaymentsLocalDataSourceImpl implements PaymentsLocalDataSource {
   }
 
   @override
-  Future<List<PaymentModel>> getPaymentsByType(PaymentType type) async {
+  Future<List<PaymentModel>> getPaymentsByType(
+    PaymentType type,
+    String userId,
+  ) async {
     try {
       final typeValue = type == PaymentType.toPay ? 0 : 1;
       return paymentsBox.values
-          .where((payment) => payment.type == typeValue)
+          .where(
+            (payment) => payment.userId == userId && payment.type == typeValue,
+          )
           .toList()
         ..sort((a, b) => b.dueDate.compareTo(a.dueDate));
     } catch (e) {

@@ -96,6 +96,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     final now = DateTime.now();
     final note = Note(
       id: widget.note.id,
+      userId: widget.note.userId,
       title: title.isEmpty ? 'Untitled' : title,
       content: content,
       tags: _tags,

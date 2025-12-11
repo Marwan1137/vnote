@@ -18,6 +18,7 @@ class PaymentModelAdapter extends TypeAdapter<PaymentModel> {
     };
     return PaymentModel(
       id: fields[0] as String,
+      userId: fields[15] as String,
       title: fields[1] as String,
       amount: fields[2] as double,
       currency: fields[3] as String,
@@ -38,7 +39,7 @@ class PaymentModelAdapter extends TypeAdapter<PaymentModel> {
   @override
   void write(BinaryWriter writer, PaymentModel obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -68,7 +69,9 @@ class PaymentModelAdapter extends TypeAdapter<PaymentModel> {
       ..writeByte(13)
       ..write(obj.paymentDate)
       ..writeByte(14)
-      ..write(obj.notes);
+      ..write(obj.notes)
+      ..writeByte(15)
+      ..write(obj.userId);
   }
 
   @override
