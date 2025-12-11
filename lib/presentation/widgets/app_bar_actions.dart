@@ -19,20 +19,21 @@ class AppBarActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Theme toggle icon
-        IconButton(
-          icon: Icon(
-            themeProvider.themeMode == ThemeMode.dark
-                ? Icons.light_mode
-                : Icons.dark_mode,
+        // Theme toggle icon (only show if authenticated)
+        if (authState is AuthAuthenticated)
+          IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            onPressed: () {
+              themeProvider.toggleTheme();
+            },
+            tooltip: themeProvider.themeMode == ThemeMode.dark
+                ? 'Switch to light mode'
+                : 'Switch to dark mode',
           ),
-          onPressed: () {
-            themeProvider.toggleTheme();
-          },
-          tooltip: themeProvider.themeMode == ThemeMode.dark
-              ? 'Switch to light mode'
-              : 'Switch to dark mode',
-        ),
         // Account icon (only show if authenticated)
         if (authState is AuthAuthenticated)
           IconButton(

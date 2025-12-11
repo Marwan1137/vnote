@@ -13,6 +13,7 @@ import '../../../core/auth/usecases/sign_out_usecase.dart';
 import '../../../core/auth/usecases/sign_up_usecase.dart';
 import '../../../core/auth/usecases/update_password_usecase.dart';
 import '../../../core/errors/failures.dart';
+import '../../../core/utils/user_friendly_errors.dart';
 import 'auth_state.dart';
 
 @injectable
@@ -90,7 +91,14 @@ class AuthCubit extends Cubit<AuthState> {
           // Get user to show email not verified state
           _checkAuthState();
         } else {
-          emit(AuthError(failure.message));
+          emit(
+            AuthError(
+              UserFriendlyErrors.getUserFriendlyMessage(
+                failure,
+                context: 'auth',
+              ),
+            ),
+          );
         }
       },
       (user) {
@@ -122,7 +130,14 @@ class AuthCubit extends Cubit<AuthState> {
         (failure) {
           if (isClosed) return;
 
-          emit(AuthError(failure.message));
+          emit(
+            AuthError(
+              UserFriendlyErrors.getUserFriendlyMessage(
+                failure,
+                context: 'auth',
+              ),
+            ),
+          );
         },
         (user) {
           if (isClosed) return;
@@ -134,7 +149,9 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       if (isClosed) return;
 
-      emit(AuthError('An internal error has occurred: $e'));
+      emit(
+        AuthError(UserFriendlyErrors.getGenericErrorMessage(context: 'auth')),
+      );
     }
   }
 
@@ -148,7 +165,14 @@ class AuthCubit extends Cubit<AuthState> {
     result.fold(
       (failure) {
         if (!isClosed) {
-          emit(AuthError(failure.message));
+          emit(
+            AuthError(
+              UserFriendlyErrors.getUserFriendlyMessage(
+                failure,
+                context: 'auth',
+              ),
+            ),
+          );
         }
       },
       (_) {
@@ -171,7 +195,14 @@ class AuthCubit extends Cubit<AuthState> {
     result.fold(
       (failure) {
         if (!isClosed) {
-          emit(AuthError(failure.message));
+          emit(
+            AuthError(
+              UserFriendlyErrors.getUserFriendlyMessage(
+                failure,
+                context: 'auth',
+              ),
+            ),
+          );
         }
       },
       (_) {
@@ -193,10 +224,17 @@ class AuthCubit extends Cubit<AuthState> {
     final result = await resetPasswordUseCase(
       ResetPasswordParams(email: email, otp: otp, newPassword: newPassword),
     );
-    result.fold((failure) => emit(AuthError(failure.message)), (_) {
-      // After password reset, user needs to sign in again
-      emit(AuthUnauthenticated());
-    });
+    result.fold(
+      (failure) => emit(
+        AuthError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'auth'),
+        ),
+      ),
+      (_) {
+        // After password reset, user needs to sign in again
+        emit(AuthUnauthenticated());
+      },
+    );
   }
 
   Future<void> sendEmailVerification() async {
@@ -208,7 +246,14 @@ class AuthCubit extends Cubit<AuthState> {
     result.fold(
       (failure) {
         if (!isClosed) {
-          emit(AuthError(failure.message));
+          emit(
+            AuthError(
+              UserFriendlyErrors.getUserFriendlyMessage(
+                failure,
+                context: 'auth',
+              ),
+            ),
+          );
         }
       },
       (_) {
@@ -232,7 +277,14 @@ class AuthCubit extends Cubit<AuthState> {
       result.fold(
         (failure) {
           if (!isClosed) {
-            emit(AuthError(failure.message));
+            emit(
+              AuthError(
+                UserFriendlyErrors.getUserFriendlyMessage(
+                  failure,
+                  context: 'auth',
+                ),
+              ),
+            );
           }
         },
         (isVerified) async {
@@ -251,7 +303,14 @@ class AuthCubit extends Cubit<AuthState> {
             userResult.fold(
               (failure) {
                 if (!isClosed) {
-                  emit(AuthError(failure.message));
+                  emit(
+                    AuthError(
+                      UserFriendlyErrors.getUserFriendlyMessage(
+                        failure,
+                        context: 'auth',
+                      ),
+                    ),
+                  );
                 }
               },
               (user) {
@@ -289,7 +348,9 @@ class AuthCubit extends Cubit<AuthState> {
       );
     } catch (e) {
       if (!isClosed) {
-        emit(AuthError('Failed to check email verification: $e'));
+        emit(
+          AuthError(UserFriendlyErrors.getGenericErrorMessage(context: 'auth')),
+        );
       }
     }
   }
@@ -299,7 +360,11 @@ class AuthCubit extends Cubit<AuthState> {
       IsEmailRegisteredParams(email: email),
     );
     return result.fold((failure) {
-      emit(AuthError(failure.message));
+      emit(
+        AuthError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'auth'),
+        ),
+      );
       return false;
     }, (isRegistered) => isRegistered);
   }
@@ -326,7 +391,14 @@ class AuthCubit extends Cubit<AuthState> {
     result.fold(
       (failure) {
         if (!isClosed) {
-          emit(AuthError(failure.message));
+          emit(
+            AuthError(
+              UserFriendlyErrors.getUserFriendlyMessage(
+                failure,
+                context: 'auth',
+              ),
+            ),
+          );
         }
       },
       (_) {

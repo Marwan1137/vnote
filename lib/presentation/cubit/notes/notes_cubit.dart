@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import '../../../core/utils/user_friendly_errors.dart';
 import 'package:vnote/domain/entities/note.dart';
 import 'package:vnote/domain/usecases/create_note_usecase.dart';
 import 'package:vnote/domain/usecases/delete_note_usecase.dart';
@@ -31,13 +32,20 @@ class NotesCubit extends Cubit<NotesState> {
 
     final result = await getAllNotesUseCase(const NoParams());
 
-    result.fold((failure) => emit(NotesError(failure.message)), (notes) {
-      if (notes.isEmpty) {
-        emit(NotesEmpty());
-      } else {
-        emit(NotesLoaded(notes: notes, filteredNotes: notes));
-      }
-    });
+    result.fold(
+      (failure) => emit(
+        NotesError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'notes'),
+        ),
+      ),
+      (notes) {
+        if (notes.isEmpty) {
+          emit(NotesEmpty());
+        } else {
+          emit(NotesLoaded(notes: notes, filteredNotes: notes));
+        }
+      },
+    );
   }
 
   // Search notes
@@ -52,13 +60,21 @@ class NotesCubit extends Cubit<NotesState> {
 
     final result = await searchNotesUseCase(SearchNotesParams(query));
 
-    result.fold((failure) => emit(NotesError(failure.message)), (
-      searchResults,
-    ) {
-      emit(
-        currentState.copyWith(filteredNotes: searchResults, searchQuery: query),
-      );
-    });
+    result.fold(
+      (failure) => emit(
+        NotesError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'notes'),
+        ),
+      ),
+      (searchResults) {
+        emit(
+          currentState.copyWith(
+            filteredNotes: searchResults,
+            searchQuery: query,
+          ),
+        );
+      },
+    );
   }
 
   // Apply filter (All, Recent, Favorites)
@@ -108,7 +124,11 @@ class NotesCubit extends Cubit<NotesState> {
     final result = await deleteNoteUseCase(DeleteNoteParams(id));
 
     result.fold(
-      (failure) => emit(NotesError(failure.message)),
+      (failure) => emit(
+        NotesError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'notes'),
+        ),
+      ),
       (_) => loadNotes(),
     );
   }
@@ -123,7 +143,11 @@ class NotesCubit extends Cubit<NotesState> {
     final result = await updateNoteUseCase(UpdateNoteParams(updatedNote));
 
     result.fold(
-      (failure) => emit(NotesError(failure.message)),
+      (failure) => emit(
+        NotesError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'notes'),
+        ),
+      ),
       (_) => loadNotes(),
     );
   }
@@ -138,7 +162,11 @@ class NotesCubit extends Cubit<NotesState> {
     final result = await createNoteUseCase(CreateNoteParams(note));
 
     result.fold(
-      (failure) => emit(NotesError(failure.message)),
+      (failure) => emit(
+        NotesError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'notes'),
+        ),
+      ),
       (_) => loadNotes(),
     );
   }
@@ -148,7 +176,11 @@ class NotesCubit extends Cubit<NotesState> {
     final result = await updateNoteUseCase(UpdateNoteParams(note));
 
     result.fold(
-      (failure) => emit(NotesError(failure.message)),
+      (failure) => emit(
+        NotesError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'notes'),
+        ),
+      ),
       (_) => loadNotes(),
     );
   }

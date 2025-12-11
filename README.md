@@ -151,23 +151,23 @@ To revolutionize productivity by enabling users to capture, organize, and manage
 
 | Splash Screen | Onboarding | Sign In |
 |:-------------:|:----------:|:-------:|
-| ![Splash Screen](screenshots/splash_screen.png) | ![Onboarding](screenshots/onboarding_screen.png) | ![Sign In](screenshots/sign_in_screen.png) |
+| ![Splash Screen](assets/ScreenShots/Splash_Screen.png) | ![Onboarding](assets/ScreenShots/OnBoarding_Screen.png) | ![Sign In](assets/ScreenShots/SignIn_Screen.png) |
 
 | Sign Up | Forgot Password | Home Screen |
 |:-------:|:---------------:|:-----------:|
-| ![Sign Up](screenshots/sign_up_screen.png) | ![Forgot Password](screenshots/forgot_password_screen.png) | ![Home](screenshots/home_screen.png) |
+| ![Sign Up](assets/ScreenShots/SignUp_Screen.png) | ![Forgot Password](assets/ScreenShots/Forget_Password_Screen.png) | ![Home](assets/ScreenShots/Home_Screen.png) |
 
 | Notes Screen | Note Detail | Recording Screen |
 |:------------:|:-----------:|:----------------:|
-| ![Notes](screenshots/notes_screen.png) | ![Note Detail](screenshots/note_detail_screen.png) | ![Recording](screenshots/recording_screen.png) |
+| ![Notes](assets/ScreenShots/Notes_Screen.png) | ![Note Detail](assets/ScreenShots/Notes_Details_Screen.png) | ![Recording](assets/ScreenShots/Recording_Screen.png) |
 
-| Payments Screen | Payment Detail | Add Payment |
-|:---------------:|:--------------:|:-----------:|
-| ![Payments](screenshots/payments_screen.png) | ![Payment Detail](screenshots/payment_detail_screen.png) | ![Add Payment](screenshots/add_payment_screen.png) |
+| Payments Screen | Payment Detail | Events Screen |
+|:---------------:|:--------------:|:-------------:|
+| ![Payments](assets/ScreenShots/Payment_Screen.png) | ![Payment Detail](assets/ScreenShots/Payment_Details_Screen.png) | ![Events](assets/ScreenShots/Events_Screen.png) |
 
-| Events Screen | Event Detail | Profile Screen |
-|:-------------:|:------------:|:--------------:|
-| ![Events](screenshots/events_screen.png) | ![Event Detail](screenshots/event_detail_screen.png) | ![Profile](screenshots/profile_screen.png) |
+| Event Detail | Profile Screen |
+|:------------:|:--------------:|
+| ![Event Detail](assets/ScreenShots/Events_Details_Screen.png) | ![Profile](assets/ScreenShots/Profile_Screen.png) |
 
 </div>
 
@@ -330,6 +330,21 @@ vnote/
 │   └── main.dart                    # App entry point
 │
 ├── assets/
+│   ├── ScreenShots/                 # App screenshots
+│   │   ├── Splash_Screen.png
+│   │   ├── OnBoarding_Screen.png
+│   │   ├── SignIn_Screen.png
+│   │   ├── SignUp_Screen.png
+│   │   ├── Forget_Password_Screen.png
+│   │   ├── Home_Screen.png
+│   │   ├── Notes_Screen.png
+│   │   ├── Notes_Details_Screen.png
+│   │   ├── Recording_Screen.png
+│   │   ├── Payment_Screen.png
+│   │   ├── Payment_Details_Screen.png
+│   │   ├── Events_Screen.png
+│   │   ├── Events_Details_Screen.png
+│   │   └── Profile_Screen.png
 │   └── splash_screen/               # Splash screen animations
 │       ├── mic.json
 │       └── voice.json
@@ -344,22 +359,23 @@ vnote/
 │   ├── payment_llm_datasource_impl.md
 │   └── event_llm_datasource_impl.md
 │
-├── screenshots/                     # App screenshots
-│   ├── splash_screen.png
-│   ├── onboarding_screen.png
-│   ├── sign_in_screen.png
-│   ├── sign_up_screen.png
-│   ├── forgot_password_screen.png
-│   ├── home_screen.png
-│   ├── notes_screen.png
-│   ├── note_detail_screen.png
-│   ├── recording_screen.png
-│   ├── payments_screen.png
-│   ├── payment_detail_screen.png
-│   ├── add_payment_screen.png
-│   ├── events_screen.png
-│   ├── event_detail_screen.png
-│   └── profile_screen.png
+├── assets/
+│   ├── ScreenShots/                 # App screenshots
+│   │   ├── Splash_Screen.png
+│   │   ├── OnBoarding_Screen.png
+│   │   ├── SignIn_Screen.png
+│   │   ├── SignUp_Screen.png
+│   │   ├── Forget_Password_Screen.png
+│   │   ├── Home_Screen.png
+│   │   ├── Notes_Screen.png
+│   │   ├── Notes_Details_Screen.png
+│   │   ├── Recording_Screen.png
+│   │   ├── Payment_Screen.png
+│   │   ├── Payment_Details_Screen.png
+│   │   ├── Events_Screen.png
+│   │   ├── Events_Details_Screen.png
+│   │   └── Profile_Screen.png
+│   └── splash_screen/               # Splash screen animations
 │
 ├── test/                            # Unit & Widget Tests
 ├── pubspec.yaml                     # Dependencies

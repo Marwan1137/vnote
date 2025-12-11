@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/utils/user_friendly_errors.dart';
 import '../../../domain/entities/event.dart';
 import '../../../domain/usecases/events/create_event_usecase.dart';
 import '../../../domain/usecases/events/delete_event_usecase.dart';
@@ -50,7 +51,14 @@ class EventsCubit extends Cubit<EventsState> {
 
     result.fold(
       (failure) {
-        emit(EventsError(failure.message));
+        emit(
+          EventsError(
+            UserFriendlyErrors.getUserFriendlyMessage(
+              failure,
+              context: 'events',
+            ),
+          ),
+        );
       },
       (events) {
         if (events.isEmpty) {
@@ -63,28 +71,41 @@ class EventsCubit extends Cubit<EventsState> {
   }
 
   Future<void> loadEventsByMonth(int year, int month) async {
-    emit(EventsLoading());
+    final currentState = state;
+    if (currentState is EventsLoaded) {
+      // If we already have events loaded, preserve them for calendar markers
+      // Only filter events for the selected month in the list view
+      final eventsForMonth = currentState.events.where((event) {
+        return event.dateTime.year == year && event.dateTime.month == month;
+      }).toList();
 
-    final result = await getEventsByMonthUseCase(
-      GetEventsByMonthParams(year, month),
-    );
+      emit(
+        currentState.copyWith(
+          filteredEvents: List<Event>.from(eventsForMonth),
+          selectedYear: year,
+          selectedMonth: month,
+        ),
+      );
+    } else {
+      // If no events are loaded, fetch events for the month
+      emit(EventsLoading());
 
-    result.fold(
-      (failure) {
-        emit(EventsError(failure.message));
-      },
-      (events) {
-        final currentState = state;
-        if (currentState is EventsLoaded) {
+      final result = await getEventsByMonthUseCase(
+        GetEventsByMonthParams(year, month),
+      );
+
+      result.fold(
+        (failure) {
           emit(
-            currentState.copyWith(
-              events: List<Event>.from(events),
-              filteredEvents: List<Event>.from(events),
-              selectedYear: year,
-              selectedMonth: month,
+            EventsError(
+              UserFriendlyErrors.getUserFriendlyMessage(
+                failure,
+                context: 'events',
+              ),
             ),
           );
-        } else {
+        },
+        (events) {
           emit(
             EventsLoaded(
               events: List<Event>.from(events),
@@ -93,31 +114,46 @@ class EventsCubit extends Cubit<EventsState> {
               selectedMonth: month,
             ),
           );
-        }
-      },
-    );
+        },
+      );
+    }
   }
 
   Future<void> loadEventsByDate(DateTime date) async {
-    emit(EventsLoading());
+    final currentState = state;
+    if (currentState is EventsLoaded) {
+      // If we already have events loaded, just filter them by date
+      // This preserves all events for the calendar markers
+      final eventsForDate = currentState.events.where((event) {
+        return event.dateTime.year == date.year &&
+            event.dateTime.month == date.month &&
+            event.dateTime.day == date.day;
+      }).toList();
 
-    final result = await getEventsByDateUseCase(GetEventsByDateParams(date));
+      emit(
+        currentState.copyWith(
+          filteredEvents: List<Event>.from(eventsForDate),
+          selectedDate: date,
+        ),
+      );
+    } else {
+      // If no events are loaded, fetch events for the date
+      emit(EventsLoading());
 
-    result.fold(
-      (failure) {
-        emit(EventsError(failure.message));
-      },
-      (events) {
-        final currentState = state;
-        if (currentState is EventsLoaded) {
+      final result = await getEventsByDateUseCase(GetEventsByDateParams(date));
+
+      result.fold(
+        (failure) {
           emit(
-            currentState.copyWith(
-              events: List<Event>.from(events),
-              filteredEvents: List<Event>.from(events),
-              selectedDate: date,
+            EventsError(
+              UserFriendlyErrors.getUserFriendlyMessage(
+                failure,
+                context: 'events',
+              ),
             ),
           );
-        } else {
+        },
+        (events) {
           emit(
             EventsLoaded(
               events: List<Event>.from(events),
@@ -125,9 +161,9 @@ class EventsCubit extends Cubit<EventsState> {
               selectedDate: date,
             ),
           );
-        }
-      },
-    );
+        },
+      );
+    }
   }
 
   Future<void> loadUpcomingEvents() async {
@@ -137,7 +173,14 @@ class EventsCubit extends Cubit<EventsState> {
 
     result.fold(
       (failure) {
-        emit(EventsError(failure.message));
+        emit(
+          EventsError(
+            UserFriendlyErrors.getUserFriendlyMessage(
+              failure,
+              context: 'events',
+            ),
+          ),
+        );
       },
       (events) {
         if (events.isEmpty) {
@@ -178,69 +221,88 @@ class EventsCubit extends Cubit<EventsState> {
   Future<void> createEvent(Event event) async {
     final result = await createEventUseCase(event);
 
-    result.fold((failure) => emit(EventsError(failure.message)), (
-      createdEvent,
-    ) {
-      final currentState = state;
-      if (currentState is EventsLoaded) {
-        final updatedEvents = [createdEvent, ...currentState.events];
-        emit(
-          currentState.copyWith(
-            events: List<Event>.from(updatedEvents),
-            filteredEvents: List<Event>.from(updatedEvents),
-          ),
-        );
-      } else {
-        loadEvents();
-      }
-    });
+    result.fold(
+      (failure) => emit(
+        EventsError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'events'),
+        ),
+      ),
+      (createdEvent) {
+        final currentState = state;
+        if (currentState is EventsLoaded) {
+          final updatedEvents = [createdEvent, ...currentState.events];
+          emit(
+            currentState.copyWith(
+              events: List<Event>.from(updatedEvents),
+              filteredEvents: List<Event>.from(updatedEvents),
+            ),
+          );
+        } else {
+          loadEvents();
+        }
+      },
+    );
   }
 
   Future<void> updateEvent(Event event) async {
     final updatedEvent = event.copyWith(updatedAt: DateTime.now());
     final result = await updateEventUseCase(updatedEvent);
 
-    result.fold((failure) => emit(EventsError(failure.message)), (updated) {
-      final currentState = state;
-      if (currentState is EventsLoaded) {
-        final updatedEvents = currentState.events
-            .map((e) => e.id == updated.id ? updated : e)
-            .toList();
-        emit(
-          currentState.copyWith(
-            events: List<Event>.from(updatedEvents),
-            filteredEvents: List<Event>.from(updatedEvents),
-          ),
-        );
-      } else {
-        loadEvents();
-      }
-    });
+    result.fold(
+      (failure) => emit(
+        EventsError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'events'),
+        ),
+      ),
+      (updated) {
+        final currentState = state;
+        if (currentState is EventsLoaded) {
+          final updatedEvents = currentState.events
+              .map((e) => e.id == updated.id ? updated : e)
+              .toList();
+          emit(
+            currentState.copyWith(
+              events: List<Event>.from(updatedEvents),
+              filteredEvents: List<Event>.from(updatedEvents),
+            ),
+          );
+        } else {
+          loadEvents();
+        }
+      },
+    );
   }
 
   Future<void> deleteEvent(String id) async {
     final result = await deleteEventUseCase(DeleteEventParams(id));
 
-    result.fold((failure) => emit(EventsError(failure.message)), (_) {
-      final currentState = state;
-      if (currentState is EventsLoaded) {
-        final updatedEvents = currentState.events
-            .where((e) => e.id != id)
-            .toList();
-        if (updatedEvents.isEmpty) {
-          emit(EventsEmpty());
+    result.fold(
+      (failure) => emit(
+        EventsError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'events'),
+        ),
+      ),
+      (_) {
+        final currentState = state;
+        if (currentState is EventsLoaded) {
+          final updatedEvents = currentState.events
+              .where((e) => e.id != id)
+              .toList();
+          if (updatedEvents.isEmpty) {
+            emit(EventsEmpty());
+          } else {
+            emit(
+              currentState.copyWith(
+                events: updatedEvents,
+                filteredEvents: updatedEvents,
+              ),
+            );
+          }
         } else {
-          emit(
-            currentState.copyWith(
-              events: updatedEvents,
-              filteredEvents: updatedEvents,
-            ),
-          );
+          loadEvents();
         }
-      } else {
-        loadEvents();
-      }
-    });
+      },
+    );
   }
 
   Future<void> markCompleted(String id) async {
@@ -248,22 +310,29 @@ class EventsCubit extends Cubit<EventsState> {
       MarkEventCompletedParams(id),
     );
 
-    result.fold((failure) => emit(EventsError(failure.message)), (updated) {
-      final currentState = state;
-      if (currentState is EventsLoaded) {
-        final updatedEvents = currentState.events
-            .map((e) => e.id == updated.id ? updated : e)
-            .toList();
-        emit(
-          currentState.copyWith(
-            events: List<Event>.from(updatedEvents),
-            filteredEvents: List<Event>.from(updatedEvents),
-          ),
-        );
-      } else {
-        loadEvents();
-      }
-    });
+    result.fold(
+      (failure) => emit(
+        EventsError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'events'),
+        ),
+      ),
+      (updated) {
+        final currentState = state;
+        if (currentState is EventsLoaded) {
+          final updatedEvents = currentState.events
+              .map((e) => e.id == updated.id ? updated : e)
+              .toList();
+          emit(
+            currentState.copyWith(
+              events: List<Event>.from(updatedEvents),
+              filteredEvents: List<Event>.from(updatedEvents),
+            ),
+          );
+        } else {
+          loadEvents();
+        }
+      },
+    );
   }
 
   Future<void> markCancelled(String id) async {
@@ -271,22 +340,29 @@ class EventsCubit extends Cubit<EventsState> {
       MarkEventCancelledParams(id),
     );
 
-    result.fold((failure) => emit(EventsError(failure.message)), (updated) {
-      final currentState = state;
-      if (currentState is EventsLoaded) {
-        final updatedEvents = currentState.events
-            .map((e) => e.id == updated.id ? updated : e)
-            .toList();
-        emit(
-          currentState.copyWith(
-            events: List<Event>.from(updatedEvents),
-            filteredEvents: List<Event>.from(updatedEvents),
-          ),
-        );
-      } else {
-        loadEvents();
-      }
-    });
+    result.fold(
+      (failure) => emit(
+        EventsError(
+          UserFriendlyErrors.getUserFriendlyMessage(failure, context: 'events'),
+        ),
+      ),
+      (updated) {
+        final currentState = state;
+        if (currentState is EventsLoaded) {
+          final updatedEvents = currentState.events
+              .map((e) => e.id == updated.id ? updated : e)
+              .toList();
+          emit(
+            currentState.copyWith(
+              events: List<Event>.from(updatedEvents),
+              filteredEvents: List<Event>.from(updatedEvents),
+            ),
+          );
+        } else {
+          loadEvents();
+        }
+      },
+    );
   }
 
   Future<void> processTranscription(String transcription) async {
@@ -296,7 +372,14 @@ class EventsCubit extends Cubit<EventsState> {
 
     result.fold(
       (failure) {
-        emit(EventsError(failure.message));
+        emit(
+          EventsError(
+            UserFriendlyErrors.getUserFriendlyMessage(
+              failure,
+              context: 'events',
+            ),
+          ),
+        );
       },
       (processedEvents) async {
         // Create all events simultaneously for better performance
@@ -342,7 +425,14 @@ class EventsCubit extends Cubit<EventsState> {
               // If any event creation fails, mark error
               if (!hasError) {
                 hasError = true;
-                emit(EventsError(failure.message));
+                emit(
+                  EventsError(
+                    UserFriendlyErrors.getUserFriendlyMessage(
+                      failure,
+                      context: 'events',
+                    ),
+                  ),
+                );
               }
             },
             (event) {

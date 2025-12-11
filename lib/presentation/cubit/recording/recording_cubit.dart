@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/utils/user_friendly_errors.dart';
 import '../../../domain/entities/note.dart';
 import '../../../domain/entities/processed_note.dart';
 import '../../../domain/entities/recording.dart';
@@ -46,29 +47,45 @@ class RecordingCubit extends Cubit<RecordingState> {
 
   Future<void> checkPermission() async {
     final result = await checkMicrophonePermissionUseCase(const NoParams());
-    result.fold((failure) => emit(RecordingPermissionDenied(failure.message)), (
-      hasPermission,
-    ) {
-      if (hasPermission) {
-        emit(RecordingReady());
-      } else {
-        emit(RecordingPermissionDenied('Microphone permission is required'));
-      }
-    });
+    result.fold(
+      (failure) => emit(
+        RecordingPermissionDenied(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'recording',
+          ),
+        ),
+      ),
+      (hasPermission) {
+        if (hasPermission) {
+          emit(RecordingReady());
+        } else {
+          emit(RecordingPermissionDenied('Microphone permission is required'));
+        }
+      },
+    );
   }
 
   Future<void> requestPermission() async {
     emit(RecordingPermissionRequested());
     final result = await requestMicrophonePermissionUseCase(const NoParams());
-    result.fold((failure) => emit(RecordingPermissionDenied(failure.message)), (
-      granted,
-    ) {
-      if (granted) {
-        emit(RecordingReady());
-      } else {
-        emit(RecordingPermissionDenied('Microphone permission denied'));
-      }
-    });
+    result.fold(
+      (failure) => emit(
+        RecordingPermissionDenied(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'recording',
+          ),
+        ),
+      ),
+      (granted) {
+        if (granted) {
+          emit(RecordingReady());
+        } else {
+          emit(RecordingPermissionDenied('Microphone permission denied'));
+        }
+      },
+    );
   }
 
   Future<void> startRecording() async {
@@ -99,12 +116,22 @@ class RecordingCubit extends Cubit<RecordingState> {
     }
 
     final result = await startRecordingUseCase(const NoParams());
-    result.fold((failure) => emit(RecordingError(failure.message)), (path) {
-      _currentRecordingPath = path;
-      _recordingStartTime = DateTime.now();
-      emit(RecordingInProgress(Duration.zero));
-      _startDurationTimer();
-    });
+    result.fold(
+      (failure) => emit(
+        RecordingError(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'recording',
+          ),
+        ),
+      ),
+      (path) {
+        _currentRecordingPath = path;
+        _recordingStartTime = DateTime.now();
+        emit(RecordingInProgress(Duration.zero));
+        _startDurationTimer();
+      },
+    );
   }
 
   void _startDurationTimer() {
@@ -122,21 +149,33 @@ class RecordingCubit extends Cubit<RecordingState> {
     _durationTimer = null;
 
     if (_currentRecordingPath == null) {
-      emit(const RecordingError('No active recording'));
+      emit(
+        RecordingError(
+          UserFriendlyErrors.getGenericErrorMessage(context: 'recording'),
+        ),
+      );
       return;
     }
 
     final result = await stopRecordingUseCase(
       StopRecordingParams(_currentRecordingPath!),
     );
-    result.fold((failure) => emit(RecordingError(failure.message)), (
-      recording,
-    ) {
-      _currentRecordingPath = null;
-      _recordingStartTime = null;
-      emit(RecordingStopped(recording));
-      _processRecording(recording);
-    });
+    result.fold(
+      (failure) => emit(
+        RecordingError(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'recording',
+          ),
+        ),
+      ),
+      (recording) {
+        _currentRecordingPath = null;
+        _recordingStartTime = null;
+        emit(RecordingStopped(recording));
+        _processRecording(recording);
+      },
+    );
   }
 
   Future<void> cancelRecording() async {
@@ -225,7 +264,14 @@ class RecordingCubit extends Cubit<RecordingState> {
 
     final result = await createNoteUseCase(CreateNoteParams(note));
     result.fold(
-      (failure) => emit(RecordingError(failure.message)),
+      (failure) => emit(
+        RecordingError(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'recording',
+          ),
+        ),
+      ),
       (_) => emit(
         RecordingProcessed(
           recording,
@@ -421,17 +467,34 @@ class RecordingCubit extends Cubit<RecordingState> {
 
     final result = await createNoteUseCase(CreateNoteParams(note));
     result.fold(
-      (failure) => emit(RecordingError(failure.message)),
+      (failure) => emit(
+        RecordingError(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'recording',
+          ),
+        ),
+      ),
       (_) => emit(RecordingProcessed(recording, processedNote, null)),
     );
   }
 
   Future<void> openAppSettings() async {
     final result = await openAppSettingsUseCase(const NoParams());
-    result.fold((failure) => emit(RecordingError(failure.message)), (_) {
-      // After opening settings, check permission again when user returns
-      // This will be handled by checking permission when screen is resumed
-    });
+    result.fold(
+      (failure) => emit(
+        RecordingError(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'recording',
+          ),
+        ),
+      ),
+      (_) {
+        // After opening settings, check permission again when user returns
+        // This will be handled by checking permission when screen is resumed
+      },
+    );
   }
 
   @override

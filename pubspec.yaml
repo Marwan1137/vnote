@@ -1,5 +1,5 @@
 name: vnote
-description: "A new Flutter project."
+description: "VOYA - Voice-controlled productivity app for notes, payments, and events. One voice. Total control."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -76,6 +76,21 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+# Flutter Launcher Icons Configuration
+# To generate icons, create assets/icon/app_icon.png (1024x1024px) and run:
+# flutter pub get
+# flutter pub run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  web:
+    generate: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#9575CD"  # Purple color from AppColors
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  remove_alpha_ios: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -92,6 +107,7 @@ flutter:
   assets:
     - assets/splash_screen/
     - assets/google_credentials.json
+    - assets/ScreenShots/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

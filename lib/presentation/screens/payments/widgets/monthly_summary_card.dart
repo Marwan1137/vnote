@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_typography.dart';
-import 'package:vnote/core/constants/currencies.dart';
 
 class MonthlySummaryCard extends StatelessWidget {
   final double toPayTotal;
@@ -107,7 +106,7 @@ class MonthlySummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${Currencies.getSymbol('USD')}${amount.toStringAsFixed(2)}',
+            amount.toStringAsFixed(2),
             style: AppTypography.h3.copyWith(
               color: color,
               fontWeight: FontWeight.bold,

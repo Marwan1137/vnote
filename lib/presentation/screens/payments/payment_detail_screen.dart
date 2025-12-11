@@ -107,13 +107,16 @@ class PaymentDetailScreen extends StatelessWidget {
                     _getStatusIcon(currentPayment.status),
                     color: _getStatusColor(currentPayment.status),
                   ),
-                  const SizedBox(height: 16),
-                  _buildDetailCard(
-                    context,
-                    'Due Date',
-                    DateFormat('MMMM d, yyyy').format(currentPayment.dueDate),
-                    Icons.calendar_today,
-                  ),
+                  // Only show "Due Date" for recurring payments
+                  if (currentPayment.isRecurring) ...[
+                    const SizedBox(height: 16),
+                    _buildDetailCard(
+                      context,
+                      'Due Date',
+                      DateFormat('MMMM d, yyyy').format(currentPayment.dueDate),
+                      Icons.calendar_today,
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   _buildDetailCard(
                     context,

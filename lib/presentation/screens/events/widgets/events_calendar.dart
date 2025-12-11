@@ -63,6 +63,12 @@ class EventsCalendar extends StatelessWidget {
               focusedDay: focusedDay,
               selectedDayPredicate: (day) => isSameDay(selectedDay, day),
               eventLoader: _getEventsForDay,
+              enabledDayPredicate: (day) {
+                final today = DateTime.now();
+                final todayOnly = DateTime(today.year, today.month, today.day);
+                final dayOnly = DateTime(day.year, day.month, day.day);
+                return !dayOnly.isBefore(todayOnly);
+              },
               startingDayOfWeek: StartingDayOfWeek.sunday,
               calendarStyle: CalendarStyle(
                 outsideDaysVisible: false,
@@ -74,12 +80,31 @@ class EventsCalendar extends StatelessWidget {
                   color: AppColors.green.withOpacity(0.8),
                   shape: BoxShape.circle,
                 ),
-                markerDecoration: BoxDecoration(
-                  color: AppColors.green.withOpacity(0.7),
-                  shape: BoxShape.circle,
+                disabledDecoration: BoxDecoration(color: Colors.transparent),
+                disabledTextStyle: TextStyle(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.3),
                 ),
-                markersMaxCount: 1,
-                markerSize: 6,
+              ),
+              calendarBuilders: CalendarBuilders(
+                markerBuilder: (context, date, events) {
+                  if (events.isNotEmpty) {
+                    return Positioned(
+                      bottom: 1,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 2,
+                        decoration: BoxDecoration(
+                          color: AppColors.red,
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
               headerStyle: HeaderStyle(
                 formatButtonVisible: false,

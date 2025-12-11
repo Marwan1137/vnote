@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Vnote</string>
+	<string>VOYA</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>vnote</string>
+	<string>VOYA</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -46,8 +46,8 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>VNote needs access to your microphone to record voice notes.</string>
+	<string>VOYA needs access to your microphone to record voice notes, payments, and events.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>VNote needs access to speech recognition to transcribe your voice notes.</string>
+	<string>VOYA needs access to speech recognition to transcribe your voice recordings.</string>
 </dict>
 </plist>

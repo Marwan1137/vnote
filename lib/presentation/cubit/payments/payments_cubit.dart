@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/utils/user_friendly_errors.dart';
 import '../../../domain/entities/payment.dart';
 import '../../../domain/usecases/payments/create_payment_usecase.dart';
 import '../../../domain/usecases/payments/delete_payment_usecase.dart';
@@ -44,7 +45,14 @@ class PaymentsCubit extends Cubit<PaymentsState> {
 
     result.fold(
       (failure) {
-        emit(PaymentsError(failure.message));
+        emit(
+          PaymentsError(
+            UserFriendlyErrors.getUserFriendlyMessage(
+              failure,
+              context: 'payments',
+            ),
+          ),
+        );
       },
       (payments) {
         if (payments.isEmpty) {
@@ -65,7 +73,14 @@ class PaymentsCubit extends Cubit<PaymentsState> {
 
     result.fold(
       (failure) {
-        emit(PaymentsError(failure.message));
+        emit(
+          PaymentsError(
+            UserFriendlyErrors.getUserFriendlyMessage(
+              failure,
+              context: 'payments',
+            ),
+          ),
+        );
       },
       (payments) {
         final currentState = state;
@@ -112,90 +127,128 @@ class PaymentsCubit extends Cubit<PaymentsState> {
   Future<void> createPayment(Payment payment) async {
     final result = await createPaymentUseCase(payment);
 
-    result.fold((failure) => emit(PaymentsError(failure.message)), (
-      createdPayment,
-    ) {
-      final currentState = state;
-      if (currentState is PaymentsLoaded) {
-        final updatedPayments = [createdPayment, ...currentState.payments];
-        emit(
-          currentState.copyWith(
-            payments: List<Payment>.from(updatedPayments),
-            filteredPayments: List<Payment>.from(updatedPayments),
+    result.fold(
+      (failure) => emit(
+        PaymentsError(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'payments',
           ),
-        );
-      } else {
-        loadPayments();
-      }
-    });
+        ),
+      ),
+      (createdPayment) {
+        final currentState = state;
+        if (currentState is PaymentsLoaded) {
+          final updatedPayments = [createdPayment, ...currentState.payments];
+          emit(
+            currentState.copyWith(
+              payments: List<Payment>.from(updatedPayments),
+              filteredPayments: List<Payment>.from(updatedPayments),
+            ),
+          );
+        } else {
+          loadPayments();
+        }
+      },
+    );
   }
 
   Future<void> updatePayment(Payment payment) async {
     final updatedPayment = payment.copyWith(updatedAt: DateTime.now());
     final result = await updatePaymentUseCase(updatedPayment);
 
-    result.fold((failure) => emit(PaymentsError(failure.message)), (updated) {
-      final currentState = state;
-      if (currentState is PaymentsLoaded) {
-        final updatedPayments = currentState.payments
-            .map((p) => p.id == updated.id ? updated : p)
-            .toList();
-        emit(
-          currentState.copyWith(
-            payments: List<Payment>.from(updatedPayments),
-            filteredPayments: List<Payment>.from(updatedPayments),
+    result.fold(
+      (failure) => emit(
+        PaymentsError(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'payments',
           ),
-        );
-      } else {
-        loadPayments();
-      }
-    });
+        ),
+      ),
+      (updated) {
+        final currentState = state;
+        if (currentState is PaymentsLoaded) {
+          final updatedPayments = currentState.payments
+              .map((p) => p.id == updated.id ? updated : p)
+              .toList();
+          emit(
+            currentState.copyWith(
+              payments: List<Payment>.from(updatedPayments),
+              filteredPayments: List<Payment>.from(updatedPayments),
+            ),
+          );
+        } else {
+          loadPayments();
+        }
+      },
+    );
   }
 
   Future<void> deletePayment(String id) async {
     final result = await deletePaymentUseCase(DeletePaymentParams(id));
 
-    result.fold((failure) => emit(PaymentsError(failure.message)), (_) {
-      final currentState = state;
-      if (currentState is PaymentsLoaded) {
-        final updatedPayments = currentState.payments
-            .where((p) => p.id != id)
-            .toList();
-        if (updatedPayments.isEmpty) {
-          emit(PaymentsEmpty());
+    result.fold(
+      (failure) => emit(
+        PaymentsError(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'payments',
+          ),
+        ),
+      ),
+      (_) {
+        final currentState = state;
+        if (currentState is PaymentsLoaded) {
+          final updatedPayments = currentState.payments
+              .where((p) => p.id != id)
+              .toList();
+          if (updatedPayments.isEmpty) {
+            emit(PaymentsEmpty());
+          } else {
+            emit(
+              currentState.copyWith(
+                payments: updatedPayments,
+                filteredPayments: updatedPayments,
+              ),
+            );
+          }
         } else {
-          emit(
-            currentState.copyWith(
-              payments: updatedPayments,
-              filteredPayments: updatedPayments,
-            ),
-          );
+          loadPayments();
         }
-      } else {
-        loadPayments();
-      }
-    });
+      },
+    );
   }
 
   Future<void> markAsPaid(String id) async {
     final result = await markPaymentPaidUseCase(MarkPaymentPaidParams(id));
 
-    result.fold((failure) => emit(PaymentsError(failure.message)), (updated) {
-      final currentState = state;
-      if (currentState is PaymentsLoaded) {
-        final updatedPayments = currentState.payments
-            .map((p) => p.id == updated.id ? updated : p)
-            .toList();
-        emit(
-          currentState.copyWith(
-            payments: List<Payment>.from(updatedPayments),
-            filteredPayments: List<Payment>.from(updatedPayments),
+    result.fold(
+      (failure) => emit(
+        PaymentsError(
+          UserFriendlyErrors.getUserFriendlyMessage(
+            failure,
+            context: 'payments',
           ),
-        );
-      } else {
-        loadPayments();
-      }
-    });
+        ),
+      ),
+      (updated) {
+        final currentState = state;
+        if (currentState is PaymentsLoaded) {
+          final updatedPayments = currentState.payments
+              .map((p) => p.id == updated.id ? updated : p)
+              .toList();
+          emit(
+            currentState.copyWith(
+              payments: List<Payment>.from(updatedPayments),
+              filteredPayments: List<Payment>.from(updatedPayments),
+            ),
+          );
+        } else {
+          loadPayments();
+        }
+      },
+    );
   }
 
   Future<void> processTranscription(String transcription) async {
@@ -205,7 +258,14 @@ class PaymentsCubit extends Cubit<PaymentsState> {
 
     result.fold(
       (failure) {
-        emit(PaymentsError(failure.message));
+        emit(
+          PaymentsError(
+            UserFriendlyErrors.getUserFriendlyMessage(
+              failure,
+              context: 'payments',
+            ),
+          ),
+        );
       },
       (processedPayments) async {
         // Create all payments simultaneously for better performance
@@ -255,7 +315,14 @@ class PaymentsCubit extends Cubit<PaymentsState> {
               // If any payment creation fails, mark error
               if (!hasError) {
                 hasError = true;
-                emit(PaymentsError(failure.message));
+                emit(
+                  PaymentsError(
+                    UserFriendlyErrors.getUserFriendlyMessage(
+                      failure,
+                      context: 'payments',
+                    ),
+                  ),
+                );
               }
             },
             (payment) {

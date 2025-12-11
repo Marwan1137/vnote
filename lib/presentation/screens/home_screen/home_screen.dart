@@ -64,14 +64,17 @@ class _HomeScreenState extends State<HomeScreen> {
       bottom: false,
       child: Scaffold(
         appBar: AppBar(
-          title: Center(
-            child: Text(
-              '${AppStrings.appFirstName} ${AppStrings.appSecondName}',
-              style: AppTypography.h3.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: AppTypography.bold,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${AppStrings.appFirstName} ${AppStrings.appSecondName}',
+                style: AppTypography.h3.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: AppTypography.bold,
+                ),
               ),
-            ),
+            ],
           ),
           actions: const [AppBarActions()],
         ),
