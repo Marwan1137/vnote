@@ -103,10 +103,11 @@ import '../auth/usecases/send_password_reset_usecase.dart' as _i880;
 import '../auth/usecases/sign_in_usecase.dart' as _i136;
 import '../auth/usecases/sign_out_usecase.dart' as _i185;
 import '../auth/usecases/sign_up_usecase.dart' as _i819;
-import '../auth/usecases/verify_otp_usecase.dart' as _i896;
+import '../auth/usecases/update_password_usecase.dart' as _i791;
 import '../services/auth_service.dart' as _i745;
 import '../services/data_migration_service.dart' as _i223;
 import '../services/onboarding_service.dart' as _i854;
+import '../theme/theme_provider.dart' as _i416;
 import 'register_module.dart' as _i291;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -122,6 +123,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     final registerModule = _$RegisterModule();
     gh.lazySingleton<_i59.FirebaseAuth>(() => registerModule.firebaseAuth);
+    gh.lazySingleton<_i416.ThemeProvider>(() => registerModule.themeProvider);
     gh.lazySingleton<_i854.OnboardingService>(() => _i854.OnboardingService());
     gh.lazySingleton<_i979.Box<_i270.EventModel>>(
       () => registerModule.eventsBox,
@@ -199,10 +201,23 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i936.GetCurrentUserUseCase(gh<_i964.AuthRepository>()));
     gh.factory<_i207.ReloadUserUseCase>(
         () => _i207.ReloadUserUseCase(gh<_i964.AuthRepository>()));
-    gh.factory<_i896.VerifyOTPUseCase>(
-        () => _i896.VerifyOTPUseCase(gh<_i964.AuthRepository>()));
     gh.factory<_i185.SignOutUseCase>(
         () => _i185.SignOutUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i791.UpdatePasswordUseCase>(
+        () => _i791.UpdatePasswordUseCase(gh<_i964.AuthRepository>()));
+    gh.factory<_i1063.AuthCubit>(() => _i1063.AuthCubit(
+          gh<_i136.SignInUseCase>(),
+          gh<_i819.SignUpUseCase>(),
+          gh<_i185.SignOutUseCase>(),
+          gh<_i880.SendPasswordResetUseCase>(),
+          gh<_i388.ResetPasswordUseCase>(),
+          gh<_i352.SendEmailVerificationUseCase>(),
+          gh<_i339.CheckEmailVerificationUseCase>(),
+          gh<_i936.GetCurrentUserUseCase>(),
+          gh<_i382.IsEmailRegisteredUseCase>(),
+          gh<_i207.ReloadUserUseCase>(),
+          gh<_i791.UpdatePasswordUseCase>(),
+        ));
     gh.lazySingleton<_i745.AuthService>(
         () => _i745.AuthService(gh<_i936.GetCurrentUserUseCase>()));
     gh.lazySingleton<_i1037.PaymentsRepository>(
@@ -215,19 +230,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i415.NotesRepository>(() => _i252.NotesRepositoryImpl(
           gh<_i929.NotesLocalDataSource>(),
           gh<_i745.AuthService>(),
-        ));
-    gh.factory<_i1063.AuthCubit>(() => _i1063.AuthCubit(
-          gh<_i136.SignInUseCase>(),
-          gh<_i819.SignUpUseCase>(),
-          gh<_i185.SignOutUseCase>(),
-          gh<_i880.SendPasswordResetUseCase>(),
-          gh<_i896.VerifyOTPUseCase>(),
-          gh<_i388.ResetPasswordUseCase>(),
-          gh<_i352.SendEmailVerificationUseCase>(),
-          gh<_i339.CheckEmailVerificationUseCase>(),
-          gh<_i936.GetCurrentUserUseCase>(),
-          gh<_i382.IsEmailRegisteredUseCase>(),
-          gh<_i207.ReloadUserUseCase>(),
         ));
     gh.lazySingleton<_i126.EventsRepository>(() => _i669.EventsRepositoryImpl(
           gh<_i147.EventsLocalDataSource>(),

@@ -14,6 +14,7 @@ import 'package:vnote/presentation/screens/payments/widgets/payment_card.dart';
 import 'package:vnote/presentation/screens/recording/recording_screen.dart';
 import 'package:vnote/presentation/widgets/unified_mic_fab.dart';
 import 'package:vnote/core/utils/page_transitions.dart';
+import 'package:vnote/presentation/widgets/app_bar_actions.dart';
 
 class PaymentsScreen extends StatefulWidget {
   const PaymentsScreen({super.key});
@@ -69,144 +70,149 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Payments',
-          style: AppTypography.h3.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: AppTypography.bold,
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Payments',
+            style: AppTypography.h3.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: AppTypography.bold,
+            ),
           ),
+          actions: const [AppBarActions()],
         ),
-      ),
-      body: BlocConsumer<PaymentsCubit, PaymentsState>(
-        listener: (context, state) {
-          if (state is PaymentsLoaded) {
-            // If we just created payments, don't trigger any reloads
-            if (_justCreatedPayments && state.payments.isNotEmpty) {
-              return;
+        body: BlocConsumer<PaymentsCubit, PaymentsState>(
+          listener: (context, state) {
+            if (state is PaymentsLoaded) {
+              // If we just created payments, don't trigger any reloads
+              if (_justCreatedPayments && state.payments.isNotEmpty) {
+                return;
+              }
             }
-          }
-        },
-        builder: (context, state) {
-          if (state is PaymentsLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          },
+          builder: (context, state) {
+            if (state is PaymentsLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (state is PaymentsError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: AppColors.error),
-                  const SizedBox(height: 16),
-                  Text(
-                    state.message,
-                    style: AppTypography.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () =>
-                        context.read<PaymentsCubit>().loadPayments(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (state is PaymentsEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.payment, size: 64, color: AppColors.gray),
-                  const SizedBox(height: 16),
-                  Text('No payments yet', style: AppTypography.h4),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tap the microphone button to add your first payment',
-                    style: AppTypography.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (state is PaymentsLoaded) {
-            final toPayTotal = state.filteredPayments
-                .where((p) => p.type == PaymentType.toPay)
-                .fold<double>(0.0, (sum, p) => sum + p.amount);
-
-            final toReceiveTotal = state.filteredPayments
-                .where((p) => p.type == PaymentType.toReceive)
-                .fold<double>(0.0, (sum, p) => sum + p.amount);
-
-            return Column(
-              children: [
-                MonthlySummaryCard(
-                  toPayTotal: toPayTotal,
-                  toReceiveTotal: toReceiveTotal,
-                  onMonthChanged: _onMonthChanged,
-                  selectedYear: selectedYear ?? DateTime.now().year,
-                  selectedMonth: selectedMonth ?? DateTime.now().month,
+            if (state is PaymentsError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      style: AppTypography.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () =>
+                          context.read<PaymentsCubit>().loadPayments(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
-                FilterTabs(
-                  currentFilter: state.filter,
-                  onFilterChanged: _onFilterChanged,
+              );
+            }
+
+            if (state is PaymentsEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.payment, size: 64, color: AppColors.gray),
+                    const SizedBox(height: 16),
+                    Text('No payments yet', style: AppTypography.h4),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tap the microphone button to add your first payment',
+                      style: AppTypography.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: state.filteredPayments.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No payments found',
-                            style: AppTypography.bodyLarge,
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: state.filteredPayments.length,
-                          itemBuilder: (context, index) {
-                            final payment = state.filteredPayments[index];
-                            return PaymentCard(
-                              payment: payment,
-                              onTap: () {
-                                final cubit = context.read<PaymentsCubit>();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => BlocProvider.value(
-                                      value: cubit,
-                                      child: PaymentDetailScreen(
-                                        payment: payment,
+              );
+            }
+
+            if (state is PaymentsLoaded) {
+              final toPayTotal = state.filteredPayments
+                  .where((p) => p.type == PaymentType.toPay)
+                  .fold<double>(0.0, (sum, p) => sum + p.amount);
+
+              final toReceiveTotal = state.filteredPayments
+                  .where((p) => p.type == PaymentType.toReceive)
+                  .fold<double>(0.0, (sum, p) => sum + p.amount);
+
+              return Column(
+                children: [
+                  MonthlySummaryCard(
+                    toPayTotal: toPayTotal,
+                    toReceiveTotal: toReceiveTotal,
+                    onMonthChanged: _onMonthChanged,
+                    selectedYear: selectedYear ?? DateTime.now().year,
+                    selectedMonth: selectedMonth ?? DateTime.now().month,
+                  ),
+                  FilterTabs(
+                    currentFilter: state.filter,
+                    onFilterChanged: _onFilterChanged,
+                  ),
+                  Expanded(
+                    child: state.filteredPayments.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No payments found',
+                              style: AppTypography.bodyLarge,
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: state.filteredPayments.length,
+                            itemBuilder: (context, index) {
+                              final payment = state.filteredPayments[index];
+                              return PaymentCard(
+                                payment: payment,
+                                onTap: () {
+                                  final cubit = context.read<PaymentsCubit>();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => BlocProvider.value(
+                                        value: cubit,
+                                        child: PaymentDetailScreen(
+                                          payment: payment,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ).then((_) {
-                                  if (mounted) {
-                                    cubit.loadPayments();
-                                  }
-                                });
-                              },
-                            );
-                          },
-                        ),
-                ),
-              ],
-            );
-          }
+                                  ).then((_) {
+                                    if (mounted) {
+                                      cubit.loadPayments();
+                                    }
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              );
+            }
 
-          return const SizedBox.shrink();
-        },
-        buildWhen: (previous, current) {
-          return true;
-        },
-      ),
-      floatingActionButton: UnifiedMicFab(
-        onPressed: _onStartVoiceRecording,
-        heroTag: 'mic_fab_payments',
+            return const SizedBox.shrink();
+          },
+          buildWhen: (previous, current) {
+            return true;
+          },
+        ),
+        floatingActionButton: UnifiedMicFab(
+          onPressed: _onStartVoiceRecording,
+          heroTag: 'mic_fab_payments',
+        ),
       ),
     );
   }

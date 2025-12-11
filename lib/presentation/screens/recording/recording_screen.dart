@@ -7,6 +7,7 @@ import 'package:vnote/core/constants/app_strings.dart';
 import 'package:vnote/core/constants/app_typography.dart';
 import 'package:vnote/presentation/cubit/recording/recording_cubit.dart';
 import 'package:vnote/presentation/cubit/recording/recording_state.dart';
+import 'package:vnote/presentation/widgets/app_bar_actions.dart';
 
 enum RecordingMode { note, payment, event }
 
@@ -64,103 +65,113 @@ class _RecordingScreenContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.recordingTitle, style: AppTypography.h5),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(AppStrings.recordingTitle, style: AppTypography.h5),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
+          actions: const [AppBarActions()],
         ),
-      ),
-      body: BlocConsumer<RecordingCubit, RecordingState>(
-        listener: (context, state) {
-          if (state is RecordingProcessed) {
-            if (mode == RecordingMode.payment || mode == RecordingMode.event) {
-              // For payments and events, return the transcription string
-              Navigator.pop(context, state.transcription);
-            } else {
-              // For notes, return true to indicate note was created
-              Navigator.pop(context, true);
-            }
-          } else if (state is RecordingError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          } else if (state is RecordingPermissionDenied) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-                action: SnackBarAction(
-                  label: 'Grant',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    context.read<RecordingCubit>().requestPermission();
-                  },
+        body: BlocConsumer<RecordingCubit, RecordingState>(
+          listener: (context, state) {
+            if (state is RecordingProcessed) {
+              if (mode == RecordingMode.payment ||
+                  mode == RecordingMode.event) {
+                // For payments and events, return the transcription string
+                Navigator.pop(context, state.transcription);
+              } else {
+                // For notes, return true to indicate note was created
+                Navigator.pop(context, true);
+              }
+            } else if (state is RecordingError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.error,
                 ),
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is RecordingInitial ||
-              state is RecordingPermissionRequested) {
-            return _buildInitialState(context);
-          }
+              );
+            } else if (state is RecordingPermissionDenied) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.error,
+                  action: SnackBarAction(
+                    label: 'Grant',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      context.read<RecordingCubit>().requestPermission();
+                    },
+                  ),
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is RecordingInitial ||
+                state is RecordingPermissionRequested) {
+              return _buildInitialState(context);
+            }
 
-          if (state is RecordingPermissionDenied) {
-            return _buildPermissionDenied(context);
-          }
+            if (state is RecordingPermissionDenied) {
+              return _buildPermissionDenied(context);
+            }
 
-          if (state is RecordingReady) {
-            return _buildReadyState(context);
-          }
+            if (state is RecordingReady) {
+              return _buildReadyState(context);
+            }
 
-          if (state is RecordingInProgress) {
-            return _buildRecordingState(context, state.duration);
-          }
+            if (state is RecordingInProgress) {
+              return _buildRecordingState(context, state.duration);
+            }
 
-          if (state is RecordingTranscribing) {
-            return _buildProcessingState(context, AppStrings.transcribingAudio);
-          }
+            if (state is RecordingTranscribing) {
+              return _buildProcessingState(
+                context,
+                AppStrings.transcribingAudio,
+              );
+            }
 
-          if (state is RecordingProcessing) {
-            final message = mode == RecordingMode.payment
-                ? 'Processing payment...'
-                : mode == RecordingMode.event
-                ? 'Processing event...'
-                : AppStrings.generatingNote;
-            return _buildProcessingState(context, message);
-          }
-
-          if (state is RecordingFormatSelection) {
-            // For payments and events, skip format selection and return transcription directly
-            if (mode == RecordingMode.payment || mode == RecordingMode.event) {
-              // Return transcription immediately for payments and events
+            if (state is RecordingProcessing) {
               final message = mode == RecordingMode.payment
                   ? 'Processing payment...'
-                  : 'Processing event...';
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                Navigator.pop(context, state.transcription);
-              });
+                  : mode == RecordingMode.event
+                  ? 'Processing event...'
+                  : AppStrings.generatingNote;
               return _buildProcessingState(context, message);
             }
-            return _buildFormatSelectionState(context, state);
-          }
 
-          if (state is RecordingProcessed) {
-            return _buildSuccessState(context);
-          }
+            if (state is RecordingFormatSelection) {
+              // For payments and events, skip format selection and return transcription directly
+              if (mode == RecordingMode.payment ||
+                  mode == RecordingMode.event) {
+                // Return transcription immediately for payments and events
+                final message = mode == RecordingMode.payment
+                    ? 'Processing payment...'
+                    : 'Processing event...';
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Navigator.pop(context, state.transcription);
+                });
+                return _buildProcessingState(context, message);
+              }
+              return _buildFormatSelectionState(context, state);
+            }
 
-          if (state is RecordingError) {
-            return _buildErrorState(context, state.message);
-          }
+            if (state is RecordingProcessed) {
+              return _buildSuccessState(context);
+            }
 
-          return _buildInitialState(context);
-        },
+            if (state is RecordingError) {
+              return _buildErrorState(context, state.message);
+            }
+
+            return _buildInitialState(context);
+          },
+        ),
       ),
     );
   }

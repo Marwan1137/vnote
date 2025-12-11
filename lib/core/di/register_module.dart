@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
+import '../../core/theme/theme_provider.dart';
 import '../../data/models/event_model.dart';
 import '../../data/models/note_model.dart';
 import '../../data/models/payment_model.dart';
@@ -21,4 +22,7 @@ abstract class RegisterModule {
 
   @lazySingleton
   FirebaseAuth get firebaseAuth => FirebaseAuth.instance;
+
+  @lazySingleton
+  ThemeProvider get themeProvider => ThemeProvider();
 }

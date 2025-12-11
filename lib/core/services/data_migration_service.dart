@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
 import '../di/di.dart';
@@ -37,8 +36,7 @@ class DataMigrationService {
       // Migrate events
       await _migrateEvents(eventsBox, userId);
     } catch (e) {
-      // Log error but don't throw - migration is not critical
-      debugPrint('Data migration error: $e');
+      // Migration error - migration is not critical
     }
   }
 

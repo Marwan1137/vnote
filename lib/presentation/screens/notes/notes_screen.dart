@@ -16,6 +16,7 @@ import 'package:vnote/presentation/screens/recording/recording_screen.dart';
 import 'package:vnote/presentation/cubit/recording/recording_cubit.dart';
 import 'package:vnote/presentation/widgets/unified_mic_fab.dart';
 import 'package:vnote/core/utils/page_transitions.dart';
+import 'package:vnote/presentation/widgets/app_bar_actions.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -87,119 +88,124 @@ class _NotesScreenState extends State<NotesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Search notes...',
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.5),
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: _isSearching
+              ? TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Search notes...',
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+                  style: AppTypography.bodyLarge,
+                  onChanged: _onSearchChanged,
+                )
+              : Text(
+                  'Notes',
+                  style: AppTypography.h3.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: AppTypography.bold,
                   ),
                 ),
-                style: AppTypography.bodyLarge,
-                onChanged: _onSearchChanged,
-              )
-            : Text(
-                'Notes',
-                style: AppTypography.h3.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: AppTypography.bold,
+          actions: [
+            IconButton(
+              icon: Icon(_isSearching ? Icons.close : Icons.search),
+              onPressed: _toggleSearch,
+            ),
+            const AppBarActions(),
+          ],
+        ),
+        body: BlocBuilder<NotesCubit, NotesState>(
+          builder: (context, state) {
+            if (state is NotesLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (state is NotesError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      style: AppTypography.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => context.read<NotesCubit>().loadNotes(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
-              ),
-        actions: [
-          IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
-            onPressed: _toggleSearch,
-          ),
-        ],
-      ),
-      body: BlocBuilder<NotesCubit, NotesState>(
-        builder: (context, state) {
-          if (state is NotesLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+              );
+            }
 
-          if (state is NotesError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: AppColors.error),
-                  const SizedBox(height: 16),
-                  Text(
-                    state.message,
-                    style: AppTypography.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.read<NotesCubit>().loadNotes(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
+            if (state is NotesEmpty) {
+              return const EmptyState();
+            }
 
-          if (state is NotesEmpty) {
-            return const EmptyState();
-          }
+            if (state is NotesLoaded) {
+              return RefreshIndicator(
+                onRefresh: () async {
+                  await context.read<NotesCubit>().refreshNotes();
+                },
+                child: Column(
+                  children: [
+                    FilterChips(
+                      currentFilter: state.filter,
+                      onFilterChanged: _onFilterChanged,
+                    ),
+                    Expanded(
+                      child: state.filteredNotes.isEmpty
+                          ? EmptyState(
+                              message: state.searchQuery != null
+                                  ? 'No notes found for "${state.searchQuery}"'
+                                  : 'No notes in this category',
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: state.filteredNotes.length,
+                              itemBuilder: (context, index) {
+                                final note = state.filteredNotes[index];
+                                return NoteCard(
+                                  note: note,
+                                  onTap: () => _onNoteTap(note),
+                                  onFavoriteToggle: () {
+                                    context.read<NotesCubit>().toggleFavorite(
+                                      note,
+                                    );
+                                  },
+                                  onDelete: () {
+                                    _showDeleteDialog(context, note);
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-          if (state is NotesLoaded) {
-            return RefreshIndicator(
-              onRefresh: () async {
-                await context.read<NotesCubit>().refreshNotes();
-              },
-              child: Column(
-                children: [
-                  FilterChips(
-                    currentFilter: state.filter,
-                    onFilterChanged: _onFilterChanged,
-                  ),
-                  Expanded(
-                    child: state.filteredNotes.isEmpty
-                        ? EmptyState(
-                            message: state.searchQuery != null
-                                ? 'No notes found for "${state.searchQuery}"'
-                                : 'No notes in this category',
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: state.filteredNotes.length,
-                            itemBuilder: (context, index) {
-                              final note = state.filteredNotes[index];
-                              return NoteCard(
-                                note: note,
-                                onTap: () => _onNoteTap(note),
-                                onFavoriteToggle: () {
-                                  context.read<NotesCubit>().toggleFavorite(
-                                    note,
-                                  );
-                                },
-                                onDelete: () {
-                                  _showDeleteDialog(context, note);
-                                },
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return const SizedBox.shrink();
-        },
-      ),
-      floatingActionButton: UnifiedMicFab(
-        onPressed: _onStartRecording,
-        heroTag: 'mic_fab',
+            return const SizedBox.shrink();
+          },
+        ),
+        floatingActionButton: UnifiedMicFab(
+          onPressed: _onStartRecording,
+          heroTag: 'mic_fab',
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_typography.dart';
 import 'package:vnote/domain/entities/event.dart';
 import 'package:vnote/presentation/cubit/events/events_cubit.dart';
+import 'package:vnote/presentation/widgets/app_bar_actions.dart';
 
 class EventDetailScreen extends StatelessWidget {
   final Event event;
@@ -13,101 +14,106 @@ class EventDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Event Details'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _showDeleteDialog(context),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              event.title,
-              style: AppTypography.h3.copyWith(fontWeight: FontWeight.bold),
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Event Details'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _showDeleteDialog(context),
             ),
-            const SizedBox(height: 24),
-            _buildDetailRow(
-              context,
-              Icons.access_time,
-              'Date & Time',
-              '${DateFormat('MMM d, y').format(event.dateTime)} at ${DateFormat('h:mm a').format(event.dateTime)}',
-            ),
-            if (event.location != null)
-              _buildDetailRow(
-                context,
-                Icons.location_on,
-                'Location',
-                event.location!,
-              ),
-            if (event.attendeesCount != null)
-              _buildDetailRow(
-                context,
-                Icons.people,
-                'Attendees',
-                '${event.attendeesCount} ${event.attendeesCount == 1 ? 'attendee' : 'attendees'}',
-              ),
-            _buildDetailRow(
-              context,
-              Icons.info_outline,
-              'Status',
-              event.status == EventStatus.upcoming
-                  ? 'Upcoming'
-                  : event.status == EventStatus.completed
-                  ? 'Completed'
-                  : 'Cancelled',
-            ),
-            if (event.isRecurring)
-              _buildDetailRow(
-                context,
-                Icons.repeat,
-                'Recurring',
-                event.recurringFrequency ?? 'Recurring',
-              ),
-            if (event.description != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Description',
-                style: AppTypography.h5.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(event.description!, style: AppTypography.bodyMedium),
-            ],
-            const SizedBox(height: 32),
-            if (event.status == EventStatus.upcoming)
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _markCompleted(context),
-                      icon: const Icon(Icons.check),
-                      label: const Text('Mark as Completed'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.green,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _markCancelled(context),
-                      icon: const Icon(Icons.cancel),
-                      label: const Text('Mark as Cancelled'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            const AppBarActions(),
           ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                event.title,
+                style: AppTypography.h3.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 24),
+              _buildDetailRow(
+                context,
+                Icons.access_time,
+                'Date & Time',
+                '${DateFormat('MMM d, y').format(event.dateTime)} at ${DateFormat('h:mm a').format(event.dateTime)}',
+              ),
+              if (event.location != null)
+                _buildDetailRow(
+                  context,
+                  Icons.location_on,
+                  'Location',
+                  event.location!,
+                ),
+              if (event.attendeesCount != null)
+                _buildDetailRow(
+                  context,
+                  Icons.people,
+                  'Attendees',
+                  '${event.attendeesCount} ${event.attendeesCount == 1 ? 'attendee' : 'attendees'}',
+                ),
+              _buildDetailRow(
+                context,
+                Icons.info_outline,
+                'Status',
+                event.status == EventStatus.upcoming
+                    ? 'Upcoming'
+                    : event.status == EventStatus.completed
+                    ? 'Completed'
+                    : 'Cancelled',
+              ),
+              if (event.isRecurring)
+                _buildDetailRow(
+                  context,
+                  Icons.repeat,
+                  'Recurring',
+                  event.recurringFrequency ?? 'Recurring',
+                ),
+              if (event.description != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Description',
+                  style: AppTypography.h5.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(event.description!, style: AppTypography.bodyMedium),
+              ],
+              const SizedBox(height: 32),
+              if (event.status == EventStatus.upcoming)
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _markCompleted(context),
+                        icon: const Icon(Icons.check),
+                        label: const Text('Mark as Completed'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _markCancelled(context),
+                        icon: const Icon(Icons.cancel),
+                        label: const Text('Mark as Cancelled'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -9,6 +9,7 @@ import 'package:vnote/domain/entities/payment.dart';
 import 'package:vnote/presentation/cubit/payments/payments_cubit.dart';
 import 'package:vnote/presentation/cubit/payments/payments_state.dart';
 import 'package:vnote/presentation/screens/payments/add_payment_screen.dart';
+import 'package:vnote/presentation/widgets/app_bar_actions.dart';
 
 class PaymentDetailScreen extends StatelessWidget {
   final Payment payment;
@@ -29,128 +30,133 @@ class PaymentDetailScreen extends StatelessWidget {
           currentPayment = updatedPayment;
         }
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Payment Details'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () {
-                  final cubit = context.read<PaymentsCubit>();
-                  Navigator.push(
-                    context,
-                    SlidePageRoute(
-                      page: BlocProvider.value(
-                        value: cubit,
-                        child: AddPaymentScreen(payment: currentPayment),
+        return SafeArea(
+          top: false,
+          bottom: false,
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Payment Details'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () {
+                    final cubit = context.read<PaymentsCubit>();
+                    Navigator.push(
+                      context,
+                      SlidePageRoute(
+                        page: BlocProvider.value(
+                          value: cubit,
+                          child: AddPaymentScreen(payment: currentPayment),
+                        ),
                       ),
-                    ),
-                  ).then((result) {
-                    if (result == true && context.mounted) {
-                      // Reload payments to get updated data
-                      cubit.loadPayments();
-                    }
-                  });
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () => _showDeleteDialog(context, currentPayment),
-              ),
-            ],
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDetailCard(
-                  context,
-                  'Title',
-                  currentPayment.title,
-                  Icons.title,
+                    ).then((result) {
+                      if (result == true && context.mounted) {
+                        // Reload payments to get updated data
+                        cubit.loadPayments();
+                      }
+                    });
+                  },
                 ),
-                const SizedBox(height: 16),
-                _buildDetailCard(
-                  context,
-                  'Amount',
-                  '${currentPayment.type == PaymentType.toPay ? '-' : '+'}${Currencies.getSymbol(currentPayment.currency)}${currentPayment.amount.toStringAsFixed(2)}',
-                  Icons.attach_money,
-                  color: currentPayment.type == PaymentType.toPay
-                      ? AppColors.red
-                      : AppColors.green,
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () => _showDeleteDialog(context, currentPayment),
                 ),
-                const SizedBox(height: 16),
-                _buildDetailCard(
-                  context,
-                  'Type',
-                  currentPayment.type == PaymentType.toPay
-                      ? 'To Pay'
-                      : 'To Receive',
-                  currentPayment.type == PaymentType.toPay
-                      ? Icons.trending_down
-                      : Icons.trending_up,
-                  color: currentPayment.type == PaymentType.toPay
-                      ? AppColors.red
-                      : AppColors.green,
-                ),
-                const SizedBox(height: 16),
-                _buildDetailCard(
-                  context,
-                  'Status',
-                  _getStatusText(currentPayment.status),
-                  _getStatusIcon(currentPayment.status),
-                  color: _getStatusColor(currentPayment.status),
-                ),
-                const SizedBox(height: 16),
-                _buildDetailCard(
-                  context,
-                  'Due Date',
-                  DateFormat('MMMM d, yyyy').format(currentPayment.dueDate),
-                  Icons.calendar_today,
-                ),
-                const SizedBox(height: 16),
-                _buildDetailCard(
-                  context,
-                  'Created Date',
-                  DateFormat('MMMM d, yyyy').format(currentPayment.createdAt),
-                  Icons.access_time,
-                ),
-                const SizedBox(height: 16),
-                _buildDetailCard(
-                  context,
-                  'Category',
-                  currentPayment.category,
-                  Icons.category,
-                ),
-                if (currentPayment.isRecurring) ...[
-                  const SizedBox(height: 16),
-                  _buildDetailCard(
-                    context,
-                    'Recurring',
-                    currentPayment.recurringFrequency ?? 'Monthly',
-                    Icons.repeat,
-                    color: AppColors.purple,
-                  ),
-                ],
-                if (currentPayment.notificationDays.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _buildDetailCard(
-                    context,
-                    'Notifications',
-                    currentPayment.notificationDays
-                        .map(
-                          (days) => days == 0
-                              ? 'Same day'
-                              : days == 1
-                              ? '1 day before'
-                              : '$days days before',
-                        )
-                        .join(', '),
-                    Icons.notifications,
-                  ),
-                ],
+                const AppBarActions(),
               ],
+            ),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailCard(
+                    context,
+                    'Title',
+                    currentPayment.title,
+                    Icons.title,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailCard(
+                    context,
+                    'Amount',
+                    '${currentPayment.type == PaymentType.toPay ? '-' : '+'}${Currencies.getSymbol(currentPayment.currency)}${currentPayment.amount.toStringAsFixed(2)}',
+                    Icons.attach_money,
+                    color: currentPayment.type == PaymentType.toPay
+                        ? AppColors.red
+                        : AppColors.green,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailCard(
+                    context,
+                    'Type',
+                    currentPayment.type == PaymentType.toPay
+                        ? 'To Pay'
+                        : 'To Receive',
+                    currentPayment.type == PaymentType.toPay
+                        ? Icons.trending_down
+                        : Icons.trending_up,
+                    color: currentPayment.type == PaymentType.toPay
+                        ? AppColors.red
+                        : AppColors.green,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailCard(
+                    context,
+                    'Status',
+                    _getStatusText(currentPayment.status),
+                    _getStatusIcon(currentPayment.status),
+                    color: _getStatusColor(currentPayment.status),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailCard(
+                    context,
+                    'Due Date',
+                    DateFormat('MMMM d, yyyy').format(currentPayment.dueDate),
+                    Icons.calendar_today,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailCard(
+                    context,
+                    'Created Date',
+                    DateFormat('MMMM d, yyyy').format(currentPayment.createdAt),
+                    Icons.access_time,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailCard(
+                    context,
+                    'Category',
+                    currentPayment.category,
+                    Icons.category,
+                  ),
+                  if (currentPayment.isRecurring) ...[
+                    const SizedBox(height: 16),
+                    _buildDetailCard(
+                      context,
+                      'Recurring',
+                      currentPayment.recurringFrequency ?? 'Monthly',
+                      Icons.repeat,
+                      color: AppColors.purple,
+                    ),
+                  ],
+                  if (currentPayment.notificationDays.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildDetailCard(
+                      context,
+                      'Notifications',
+                      currentPayment.notificationDays
+                          .map(
+                            (days) => days == 0
+                                ? 'Same day'
+                                : days == 1
+                                ? '1 day before'
+                                : '$days days before',
+                          )
+                          .join(', '),
+                      Icons.notifications,
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         );

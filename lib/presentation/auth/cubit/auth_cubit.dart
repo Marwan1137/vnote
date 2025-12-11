@@ -11,7 +11,7 @@ import '../../../core/auth/usecases/send_password_reset_usecase.dart';
 import '../../../core/auth/usecases/sign_in_usecase.dart';
 import '../../../core/auth/usecases/sign_out_usecase.dart';
 import '../../../core/auth/usecases/sign_up_usecase.dart';
-import '../../../core/auth/usecases/verify_otp_usecase.dart';
+import '../../../core/auth/usecases/update_password_usecase.dart';
 import '../../../core/errors/failures.dart';
 import 'auth_state.dart';
 
@@ -21,26 +21,26 @@ class AuthCubit extends Cubit<AuthState> {
   final SignUpUseCase signUpUseCase;
   final SignOutUseCase signOutUseCase;
   final SendPasswordResetUseCase sendPasswordResetUseCase;
-  final VerifyOTPUseCase verifyOTPUseCase;
   final ResetPasswordUseCase resetPasswordUseCase;
   final SendEmailVerificationUseCase sendEmailVerificationUseCase;
   final CheckEmailVerificationUseCase checkEmailVerificationUseCase;
   final GetCurrentUserUseCase getCurrentUserUseCase;
   final IsEmailRegisteredUseCase isEmailRegisteredUseCase;
   final ReloadUserUseCase reloadUserUseCase;
+  final UpdatePasswordUseCase updatePasswordUseCase;
 
   AuthCubit(
     this.signInUseCase,
     this.signUpUseCase,
     this.signOutUseCase,
     this.sendPasswordResetUseCase,
-    this.verifyOTPUseCase,
     this.resetPasswordUseCase,
     this.sendEmailVerificationUseCase,
     this.checkEmailVerificationUseCase,
     this.getCurrentUserUseCase,
     this.isEmailRegisteredUseCase,
     this.reloadUserUseCase,
+    this.updatePasswordUseCase,
   ) : super(AuthInitial()) {
     _checkAuthState();
   }
@@ -184,16 +184,6 @@ class AuthCubit extends Cubit<AuthState> {
     );
   }
 
-  Future<bool> verifyOTP(String email, String otp) async {
-    final result = await verifyOTPUseCase(
-      VerifyOTPParams(email: email, otp: otp),
-    );
-    return result.fold((failure) {
-      emit(AuthError(failure.message));
-      return false;
-    }, (isValid) => isValid);
-  }
-
   Future<void> resetPassword(
     String email,
     String otp,
@@ -316,5 +306,35 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> reloadAuthState() async {
     await _checkAuthState();
+  }
+
+  Future<void> updatePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    if (isClosed) return;
+    emit(AuthLoading());
+    final result = await updatePasswordUseCase(
+      UpdatePasswordParams(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      ),
+    );
+
+    if (isClosed) return;
+
+    result.fold(
+      (failure) {
+        if (!isClosed) {
+          emit(AuthError(failure.message));
+        }
+      },
+      (_) {
+        // Password updated successfully, reload user to get updated state
+        if (!isClosed) {
+          _checkAuthState();
+        }
+      },
+    );
   }
 }

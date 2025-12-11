@@ -134,24 +134,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> verifyOTP(String email, String otp) async {
-    try {
-      final isValid = await remoteDataSource.verifyOTP(email, otp);
-      return Right(isValid);
-    } on auth_exceptions.InvalidOTPException {
-      return Left(AuthFailure('Invalid OTP code. Please check and try again.'));
-    } on auth_exceptions.OTPExpiredException {
-      return Left(
-        AuthFailure('OTP code has expired. Please request a new one.'),
-      );
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Unexpected error: $e'));
-    }
-  }
-
-  @override
   Future<Either<Failure, void>> resetPasswordWithOTP(
     String email,
     String otp,
@@ -240,6 +222,31 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await remoteDataSource.reloadUser();
       return Right(user);
+    } on auth_exceptions.AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updatePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      await remoteDataSource.updatePassword(currentPassword, newPassword);
+      return const Right(null);
+    } on auth_exceptions.WrongPasswordException {
+      return Left(AuthFailure('Current password is incorrect.'));
+    } on auth_exceptions.WeakPasswordException {
+      return Left(
+        AuthFailure(
+          'Password is too weak. Please ensure it meets all requirements.',
+        ),
+      );
     } on auth_exceptions.AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } on ServerException catch (e) {

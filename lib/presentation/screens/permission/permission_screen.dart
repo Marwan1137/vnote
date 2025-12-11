@@ -21,6 +21,8 @@ class PermissionScreen extends StatelessWidget {
       },
       child: Scaffold(
         body: SafeArea(
+          top: false,
+          bottom: false,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(

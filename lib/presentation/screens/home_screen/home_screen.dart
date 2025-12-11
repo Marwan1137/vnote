@@ -13,6 +13,7 @@ import 'package:vnote/presentation/screens/events/events_screen.dart';
 import 'package:vnote/presentation/screens/home_screen/widgets/feature_card.dart';
 import 'package:vnote/presentation/screens/notes/notes_screen.dart';
 import 'package:vnote/presentation/screens/payments/payments_screen.dart';
+import 'package:vnote/presentation/widgets/app_bar_actions.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -72,6 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          actions: const [AppBarActions()],
         ),
         body: BlocBuilder<NotesCubit, NotesState>(
           builder: (context, state) {

@@ -4,8 +4,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:vnote/core/di/di.dart';
 import 'package:vnote/core/theme/app_theme.dart';
+import 'package:vnote/core/theme/theme_provider.dart';
 import 'package:vnote/data/models/event_model.dart';
 import 'package:vnote/data/models/note_model.dart';
 import 'package:vnote/data/models/payment_model.dart';
@@ -20,28 +22,15 @@ void main() async {
   // Set up global error handlers
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    debugPrint('═══════════════════════════════════════════════════════════');
-    debugPrint('FLUTTER ERROR CAUGHT');
-    debugPrint('═══════════════════════════════════════════════════════════');
-    debugPrint('Exception: ${details.exception}');
-    debugPrint('Library: ${details.library}');
-    debugPrint('Stack: ${details.stack}');
-    debugPrint('═══════════════════════════════════════════════════════════');
   };
 
   // Handle errors from async operations (if available)
   try {
     PlatformDispatcher.instance.onError = (error, stack) {
-      debugPrint('═══════════════════════════════════════════════════════════');
-      debugPrint('ASYNC ERROR CAUGHT');
-      debugPrint('═══════════════════════════════════════════════════════════');
-      debugPrint('Error: $error');
-      debugPrint('Stack: $stack');
-      debugPrint('═══════════════════════════════════════════════════════════');
       return true;
     };
   } catch (e) {
-    debugPrint('Could not set PlatformDispatcher.onError: $e');
+    // Error handler setup failed
   }
 
   try {
@@ -50,7 +39,7 @@ void main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-    } else {}
+    }
   } catch (e) {
     // Continue with app initialization even if Firebase fails
     // This allows the app to run in development without Firebase
@@ -72,6 +61,10 @@ void main() async {
   // Configure Dependency Injection
   configureDependencies();
 
+  // Initialize ThemeProvider
+  final themeProvider = getIt<ThemeProvider>();
+  await themeProvider.initialize();
+
   runApp(const MyApp());
 }
 
@@ -80,18 +73,26 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = getIt<ThemeProvider>();
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => getIt<NotesCubit>()),
         BlocProvider(create: (context) => getIt<AuthCubit>()),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'VNote',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        home: const SplashScreen(),
+      child: ChangeNotifierProvider.value(
+        value: themeProvider,
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'VNote',
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeProvider.themeMode,
+              home: const SplashScreen(),
+            );
+          },
+        ),
       ),
     );
   }

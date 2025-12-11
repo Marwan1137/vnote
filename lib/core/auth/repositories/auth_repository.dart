@@ -21,9 +21,6 @@ abstract class AuthRepository {
   /// Send password reset email
   Future<Either<Failure, void>> sendPasswordResetEmail(String email);
 
-  /// Verify OTP code (for password reset)
-  Future<Either<Failure, bool>> verifyOTP(String email, String otp);
-
   /// Reset password with OTP
   Future<Either<Failure, void>> resetPasswordWithOTP(
     String email,
@@ -45,4 +42,10 @@ abstract class AuthRepository {
 
   /// Reload user (to check verification status)
   Future<Either<Failure, User>> reloadUser();
+
+  /// Update password (requires current password for reauthentication)
+  Future<Either<Failure, void>> updatePassword(
+    String currentPassword,
+    String newPassword,
+  );
 }

@@ -62,118 +62,123 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
   Widget build(BuildContext context) {
     final iconColor = Theme.of(context).iconTheme.color!;
 
-    return Scaffold(
-      body: Container(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: PageView(
-          onPageChanged: (index) {
-            setState(() {
-              currentPage = index;
-            });
-          },
-          controller: controller,
-          children: [
-            buildPage(
-              title: AppStrings.onboardingTitle1,
-              subtitle: AppStrings.onboardingSubtitle1,
-              child: GradientIconBox(
-                gradientColors: [AppColors.orange, AppColors.red],
-                icon: Icons.mic,
-                size: 300,
-                iconColor: iconColor,
-              ),
-            ),
-            buildPage(
-              title: AppStrings.onboardingTitle2,
-              subtitle: AppStrings.onboardingSubtitle2,
-              child: GradientIconBox(
-                gradientColors: [AppColors.purple, AppColors.red],
-                icon: FontAwesomeIcons.brain,
-                size: 300,
-                iconColor: iconColor,
-              ),
-            ),
-            buildPage(
-              title: AppStrings.onboardingTitle3,
-              subtitle: AppStrings.onboardingSubtitle3,
-              child: GradientIconBox(
-                gradientColors: [AppColors.green, AppColors.red],
-                icon: FontAwesomeIcons.lock,
-                size: 300,
-                iconColor: iconColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomSheet: Container(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        height: 80,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Scaffold(
+        body: Container(
+          padding: const EdgeInsets.only(bottom: 80),
+          child: PageView(
+            onPageChanged: (index) {
+              setState(() {
+                currentPage = index;
+              });
+            },
+            controller: controller,
             children: [
-              _buildButton(
-                context: context,
-                text: AppStrings.skipButton,
-                onPressed: () async {
-                  await getIt<OnboardingService>().markOnboardingCompleted();
-                  if (context.mounted) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PermissionScreen(),
-                      ),
-                    );
-                  }
-                },
-              ),
-              Center(
-                child: SmoothPageIndicator(
-                  onDotClicked: (index) => controller.animateToPage(
-                    index,
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeInOut,
-                  ),
-                  controller: controller,
-                  count: 3,
-                  effect: SwapEffect(
-                    dotHeight: 12,
-                    dotWidth: 12,
-                    dotColor: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.3),
-                    activeDotColor: AppColors.red,
-                  ),
+              buildPage(
+                title: AppStrings.onboardingTitle1,
+                subtitle: AppStrings.onboardingSubtitle1,
+                child: GradientIconBox(
+                  gradientColors: [AppColors.orange, AppColors.red],
+                  icon: Icons.mic,
+                  size: 300,
+                  iconColor: iconColor,
                 ),
               ),
-              _buildButton(
-                context: context,
-                text: currentPage == 2
-                    ? AppStrings.getStartedButton
-                    : AppStrings.nextButton,
-                onPressed: () async {
-                  if (currentPage == 2) {
+              buildPage(
+                title: AppStrings.onboardingTitle2,
+                subtitle: AppStrings.onboardingSubtitle2,
+                child: GradientIconBox(
+                  gradientColors: [AppColors.purple, AppColors.red],
+                  icon: FontAwesomeIcons.brain,
+                  size: 300,
+                  iconColor: iconColor,
+                ),
+              ),
+              buildPage(
+                title: AppStrings.onboardingTitle3,
+                subtitle: AppStrings.onboardingSubtitle3,
+                child: GradientIconBox(
+                  gradientColors: [AppColors.green, AppColors.red],
+                  icon: FontAwesomeIcons.lock,
+                  size: 300,
+                  iconColor: iconColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+        bottomSheet: Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          height: 80,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildButton(
+                  context: context,
+                  text: AppStrings.skipButton,
+                  onPressed: () async {
                     await getIt<OnboardingService>().markOnboardingCompleted();
                     if (context.mounted) {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SignInScreen(),
+                          builder: (context) => const PermissionScreen(),
                         ),
                       );
                     }
-                  } else {
-                    controller.nextPage(
+                  },
+                ),
+                Center(
+                  child: SmoothPageIndicator(
+                    onDotClicked: (index) => controller.animateToPage(
+                      index,
                       duration: const Duration(milliseconds: 500),
                       curve: Curves.easeInOut,
-                    );
-                  }
-                },
-              ),
-            ],
+                    ),
+                    controller: controller,
+                    count: 3,
+                    effect: SwapEffect(
+                      dotHeight: 12,
+                      dotWidth: 12,
+                      dotColor: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.3),
+                      activeDotColor: AppColors.red,
+                    ),
+                  ),
+                ),
+                _buildButton(
+                  context: context,
+                  text: currentPage == 2
+                      ? AppStrings.getStartedButton
+                      : AppStrings.nextButton,
+                  onPressed: () async {
+                    if (currentPage == 2) {
+                      await getIt<OnboardingService>()
+                          .markOnboardingCompleted();
+                      if (context.mounted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SignInScreen(),
+                          ),
+                        );
+                      }
+                    } else {
+                      controller.nextPage(
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

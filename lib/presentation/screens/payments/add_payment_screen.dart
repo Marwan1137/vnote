@@ -12,6 +12,7 @@ import 'package:vnote/domain/entities/payment.dart';
 import 'package:vnote/presentation/cubit/payments/payments_cubit.dart';
 import 'package:vnote/presentation/cubit/recording/recording_cubit.dart';
 import 'package:vnote/presentation/screens/recording/recording_screen.dart';
+import 'package:vnote/presentation/widgets/app_bar_actions.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Payment payment;
@@ -164,6 +165,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
             icon: const Icon(Icons.mic),
             onPressed: _startVoiceRecording,
           ),
+          const AppBarActions(),
         ],
       ),
       body: _isProcessingVoice

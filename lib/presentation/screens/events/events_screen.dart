@@ -17,6 +17,7 @@ import 'package:vnote/presentation/screens/events/widgets/filter_tabs.dart';
 import 'package:vnote/presentation/screens/recording/recording_screen.dart';
 import 'package:vnote/presentation/widgets/unified_mic_fab.dart';
 import 'package:vnote/core/utils/page_transitions.dart';
+import 'package:vnote/presentation/widgets/app_bar_actions.dart';
 
 class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
@@ -111,155 +112,160 @@ class _EventsScreenState extends State<EventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Events',
-              style: AppTypography.h3.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: AppTypography.bold,
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Events',
+                style: AppTypography.h3.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: AppTypography.bold,
+                ),
               ),
-            ),
-            BlocBuilder<EventsCubit, EventsState>(
-              builder: (context, state) {
-                if (state is EventsLoaded) {
-                  final count = _getUpcomingEventsCount(state.events);
-                  return Text(
-                    '$count upcoming ${count == 1 ? 'event' : 'events'}',
-                    style: AppTypography.bodySmall.copyWith(
+              BlocBuilder<EventsCubit, EventsState>(
+                builder: (context, state) {
+                  if (state is EventsLoaded) {
+                    final count = _getUpcomingEventsCount(state.events);
+                    return Text(
+                      '$count upcoming ${count == 1 ? 'event' : 'events'}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
+          actions: const [AppBarActions()],
+        ),
+        body: BlocConsumer<EventsCubit, EventsState>(
+          listener: (context, state) {
+            if (state is EventsLoaded) {
+              if (_justCreatedEvents && state.events.isNotEmpty) {
+                return;
+              }
+            }
+          },
+          builder: (context, state) {
+            if (state is EventsLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (state is EventsError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      style: AppTypography.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => context.read<EventsCubit>().loadEvents(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            if (state is EventsEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.event,
+                      size: 64,
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-          ],
-        ),
-      ),
-      body: BlocConsumer<EventsCubit, EventsState>(
-        listener: (context, state) {
-          if (state is EventsLoaded) {
-            if (_justCreatedEvents && state.events.isNotEmpty) {
-              return;
+                    const SizedBox(height: 16),
+                    Text('No events yet', style: AppTypography.h4),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add your first event to get started',
+                      style: AppTypography.bodyMedium,
+                    ),
+                  ],
+                ),
+              );
             }
-          }
-        },
-        builder: (context, state) {
-          if (state is EventsLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
 
-          if (state is EventsError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            if (state is EventsLoaded) {
+              return Column(
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: AppColors.error),
-                  const SizedBox(height: 16),
-                  Text(
-                    state.message,
-                    style: AppTypography.bodyLarge,
-                    textAlign: TextAlign.center,
+                  EventsCalendar(
+                    focusedDay: _focusedDay,
+                    selectedDay: _selectedDay,
+                    events: state.events,
+                    onDaySelected: _onDaySelected,
+                    onPageChanged: _onPageChanged,
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.read<EventsCubit>().loadEvents(),
-                    child: const Text('Retry'),
+                  FilterTabs(
+                    currentFilter: state.filter,
+                    onFilterChanged: _onFilterChanged,
                   ),
-                ],
-              ),
-            );
-          }
-
-          if (state is EventsEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.event,
-                    size: 64,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Text('No events yet', style: AppTypography.h4),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Add your first event to get started',
-                    style: AppTypography.bodyMedium,
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (state is EventsLoaded) {
-            return Column(
-              children: [
-                EventsCalendar(
-                  focusedDay: _focusedDay,
-                  selectedDay: _selectedDay,
-                  events: state.events,
-                  onDaySelected: _onDaySelected,
-                  onPageChanged: _onPageChanged,
-                ),
-                FilterTabs(
-                  currentFilter: state.filter,
-                  onFilterChanged: _onFilterChanged,
-                ),
-                Expanded(
-                  child: state.filteredEvents.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No events found',
-                            style: AppTypography.bodyLarge,
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: state.filteredEvents.length,
-                          itemBuilder: (context, index) {
-                            final event = state.filteredEvents[index];
-                            return EventCard(
-                              event: event,
-                              onTap: () {
-                                final cubit = context.read<EventsCubit>();
-                                Navigator.push(
-                                  context,
-                                  SlidePageRoute(
-                                    page: BlocProvider.value(
-                                      value: cubit,
-                                      child: EventDetailScreen(event: event),
+                  Expanded(
+                    child: state.filteredEvents.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No events found',
+                              style: AppTypography.bodyLarge,
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: state.filteredEvents.length,
+                            itemBuilder: (context, index) {
+                              final event = state.filteredEvents[index];
+                              return EventCard(
+                                event: event,
+                                onTap: () {
+                                  final cubit = context.read<EventsCubit>();
+                                  Navigator.push(
+                                    context,
+                                    SlidePageRoute(
+                                      page: BlocProvider.value(
+                                        value: cubit,
+                                        child: EventDetailScreen(event: event),
+                                      ),
                                     ),
-                                  ),
-                                ).then((_) {
-                                  if (mounted) {
-                                    cubit.loadEvents();
-                                  }
-                                });
-                              },
-                            );
-                          },
-                        ),
-                ),
-              ],
-            );
-          }
+                                  ).then((_) {
+                                    if (mounted) {
+                                      cubit.loadEvents();
+                                    }
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              );
+            }
 
-          return const SizedBox.shrink();
-        },
-      ),
-      floatingActionButton: UnifiedMicFab(
-        onPressed: _onStartVoiceRecording,
-        heroTag: 'mic_fab_events',
+            return const SizedBox.shrink();
+          },
+        ),
+        floatingActionButton: UnifiedMicFab(
+          onPressed: _onStartVoiceRecording,
+          heroTag: 'mic_fab_events',
+        ),
       ),
     );
   }

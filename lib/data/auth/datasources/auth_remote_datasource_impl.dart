@@ -151,14 +151,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<bool> verifyOTP(String email, String otp) async {
-    // OTP verification is no longer used - password reset uses action codes from email links
-    // This method is kept for backward compatibility but always returns false
-    // The actual password reset is handled via the email link action code
-    return false;
-  }
-
-  @override
   Future<void> resetPasswordWithOTP(
     String email,
     String otp,
@@ -273,6 +265,54 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } catch (e) {
       if (e is auth_exceptions.AuthException) rethrow;
       throw ServerException('Failed to reload user: $e');
+    }
+  }
+
+  @override
+  Future<void> updatePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) {
+        throw const auth_exceptions.AuthException(
+          'No user is currently signed in.',
+        );
+      }
+
+      if (user.email == null) {
+        throw const auth_exceptions.AuthException(
+          'User email is not available.',
+        );
+      }
+
+      // Reauthenticate user with current password
+      final credential = firebase_auth.EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Update password
+      await user.updatePassword(newPassword);
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password') {
+        throw const auth_exceptions.WrongPasswordException();
+      } else if (e.code == 'weak-password') {
+        throw const auth_exceptions.WeakPasswordException();
+      } else if (e.code == 'requires-recent-login') {
+        throw const auth_exceptions.AuthException(
+          'Please sign out and sign in again before changing your password.',
+        );
+      } else {
+        throw auth_exceptions.AuthException(
+          e.message ?? 'Failed to update password.',
+        );
+      }
+    } catch (e) {
+      if (e is auth_exceptions.AuthException) rethrow;
+      throw ServerException('Failed to update password: $e');
     }
   }
 }

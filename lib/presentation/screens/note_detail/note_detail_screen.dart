@@ -6,6 +6,7 @@ import 'package:vnote/core/constants/app_colors.dart';
 import 'package:vnote/core/constants/app_typography.dart';
 import 'package:vnote/domain/entities/note.dart';
 import 'package:vnote/presentation/cubit/notes/notes_cubit.dart';
+import 'package:vnote/presentation/widgets/app_bar_actions.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final Note note;
@@ -179,139 +180,146 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: !_hasChanges,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (!didPop && _hasChanges && mounted) {
-          final shouldSave = await _onWillPop();
-          if (shouldSave == true && mounted) {
-            Navigator.pop(context);
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: PopScope(
+        canPop: !_hasChanges,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (!didPop && _hasChanges && mounted) {
+            final shouldSave = await _onWillPop();
+            if (shouldSave == true && mounted) {
+              Navigator.pop(context);
+            }
           }
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Edit Note', style: AppTypography.h6),
-          actions: [
-            IconButton(
-              icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),
-              color: _isFavorite ? AppColors.red : null,
-              onPressed: _toggleFavorite,
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: _deleteNote,
-            ),
-            IconButton(
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check),
-              onPressed: _isSaving ? null : _saveNote,
-            ),
-          ],
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title field
-              TextField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  hintText: 'Title',
-                  border: InputBorder.none,
-                  hintStyle: AppTypography.h3.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.3),
-                  ),
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Edit Note', style: AppTypography.h6),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  _isFavorite ? Icons.favorite : Icons.favorite_border,
                 ),
-                style: AppTypography.h3.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                maxLines: null,
+                color: _isFavorite ? AppColors.red : null,
+                onPressed: _toggleFavorite,
               ),
-              const SizedBox(height: 16),
-              // Tags section
-              if (_tags.isNotEmpty) ...[
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _tags.map((tag) {
-                    return Chip(
-                      label: Text(tag),
-                      onDeleted: () => _removeTag(tag),
-                      deleteIcon: const Icon(Icons.close, size: 18),
-                    );
-                  }).toList(),
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                onPressed: _deleteNote,
+              ),
+              IconButton(
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check),
+                onPressed: _isSaving ? null : _saveNote,
+              ),
+              const AppBarActions(),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title field
+                TextField(
+                  controller: _titleController,
+                  decoration: InputDecoration(
+                    hintText: 'Title',
+                    border: InputBorder.none,
+                    hintStyle: AppTypography.h3.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.3),
+                    ),
+                  ),
+                  style: AppTypography.h3.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  maxLines: null,
                 ),
                 const SizedBox(height: 16),
-              ],
-              // Add tag field
-              TextField(
-                controller: _tagController,
-                decoration: InputDecoration(
-                  hintText: 'Add tag (press Enter)',
-                  border: InputBorder.none,
-                  prefixIcon: const Icon(Icons.tag),
+                // Tags section
+                if (_tags.isNotEmpty) ...[
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _tags.map((tag) {
+                      return Chip(
+                        label: Text(tag),
+                        onDeleted: () => _removeTag(tag),
+                        deleteIcon: const Icon(Icons.close, size: 18),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                // Add tag field
+                TextField(
+                  controller: _tagController,
+                  decoration: InputDecoration(
+                    hintText: 'Add tag (press Enter)',
+                    border: InputBorder.none,
+                    prefixIcon: const Icon(Icons.tag),
+                  ),
+                  style: AppTypography.bodyMedium,
+                  onSubmitted: _addTag,
                 ),
-                style: AppTypography.bodyMedium,
-                onSubmitted: _addTag,
-              ),
-              const Divider(),
-              const SizedBox(height: 8),
-              // Content field
-              TextField(
-                controller: _contentController,
-                decoration: InputDecoration(
-                  hintText: 'Start writing...',
-                  border: InputBorder.none,
+                const Divider(),
+                const SizedBox(height: 8),
+                // Content field
+                TextField(
+                  controller: _contentController,
+                  decoration: InputDecoration(
+                    hintText: 'Start writing...',
+                    border: InputBorder.none,
+                  ),
+                  style: AppTypography.bodyLarge.copyWith(height: 1.6),
+                  maxLines: null,
+                  minLines: 10,
+                  textAlignVertical: TextAlignVertical.top,
                 ),
-                style: AppTypography.bodyLarge.copyWith(height: 1.6),
-                maxLines: null,
-                minLines: 10,
-                textAlignVertical: TextAlignVertical.top,
-              ),
-              // Note info
-              const SizedBox(height: 24),
-              Divider(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Created: ${_formatDate(widget.note.createdAt)}',
-                style: AppTypography.caption.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.5),
+                // Note info
+                const SizedBox(height: 24),
+                Divider(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Updated: ${_formatDate(widget.note.updatedAt)}',
-                style: AppTypography.caption.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.5),
-                ),
-              ),
-              if (widget.note.wordCount > 0) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 16),
                 Text(
-                  'Words: ${widget.note.wordCount}',
+                  'Created: ${_formatDate(widget.note.createdAt)}',
                   style: AppTypography.caption.copyWith(
                     color: Theme.of(
                       context,
                     ).colorScheme.onSurface.withOpacity(0.5),
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Updated: ${_formatDate(widget.note.updatedAt)}',
+                  style: AppTypography.caption.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.5),
+                  ),
+                ),
+                if (widget.note.wordCount > 0) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Words: ${widget.note.wordCount}',
+                    style: AppTypography.caption.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

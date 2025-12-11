@@ -13,9 +13,6 @@ abstract class AuthRemoteDataSource {
   /// Send password reset email
   Future<void> sendPasswordResetEmail(String email);
 
-  /// Verify OTP code (for password reset)
-  Future<bool> verifyOTP(String email, String otp);
-
   /// Reset password with OTP
   Future<void> resetPasswordWithOTP(
     String email,
@@ -37,4 +34,7 @@ abstract class AuthRemoteDataSource {
 
   /// Reload user (to check verification status)
   Future<User> reloadUser();
+
+  /// Update password (requires current password for reauthentication)
+  Future<void> updatePassword(String currentPassword, String newPassword);
 }

@@ -17,9 +17,16 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.light
-        ? ThemeMode.dark
-        : ThemeMode.light;
+    // When user manually toggles, switch between light and dark
+    // If currently system, determine based on current brightness
+    if (_themeMode == ThemeMode.system) {
+      // Default to dark when toggling from system
+      _themeMode = ThemeMode.dark;
+    } else if (_themeMode == ThemeMode.light) {
+      _themeMode = ThemeMode.dark;
+    } else {
+      _themeMode = ThemeMode.light;
+    }
     _saveThemeToPrefs();
     notifyListeners();
   }
