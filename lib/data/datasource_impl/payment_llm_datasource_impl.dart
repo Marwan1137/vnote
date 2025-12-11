@@ -13,11 +13,12 @@ import '../datasources_contracts/payment_llm_datasource.dart';
 class PaymentLLMDataSourceImpl implements PaymentLLMDataSource {
   late final GenerativeModel _model;
   static const List<String> _fallbackModels = [
+    'gemini-3-pro',
+    'gemini-2.5-pro',
     'gemini-2.5-flash',
     'gemini-2.0-flash',
     'gemini-2.5-flash-lite',
     'gemini-2.0-flash-lite',
-    'gemini-2.5-pro',
   ];
 
   PaymentLLMDataSourceImpl() {

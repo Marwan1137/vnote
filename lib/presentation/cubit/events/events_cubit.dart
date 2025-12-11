@@ -87,14 +87,13 @@ class EventsCubit extends Cubit<EventsState> {
         ),
       );
     } else {
-      // If no events are loaded, fetch events for the month
+      // If no events are loaded, first load ALL events to ensure calendar markers work
+      // Then filter by month for the list view
       emit(EventsLoading());
 
-      final result = await getEventsByMonthUseCase(
-        GetEventsByMonthParams(year, month),
-      );
+      final allEventsResult = await getAllEventsUseCase(const NoParams());
 
-      result.fold(
+      allEventsResult.fold(
         (failure) {
           emit(
             EventsError(
@@ -105,15 +104,26 @@ class EventsCubit extends Cubit<EventsState> {
             ),
           );
         },
-        (events) {
-          emit(
-            EventsLoaded(
-              events: List<Event>.from(events),
-              filteredEvents: List<Event>.from(events),
-              selectedYear: year,
-              selectedMonth: month,
-            ),
-          );
+        (allEvents) {
+          // Filter events for the selected month
+          final eventsForMonth = allEvents.where((event) {
+            return event.dateTime.year == year && event.dateTime.month == month;
+          }).toList();
+
+          if (allEvents.isEmpty) {
+            emit(EventsEmpty());
+          } else {
+            // Keep all events in state.events for calendar markers
+            // Only filter filteredEvents for the list view
+            emit(
+              EventsLoaded(
+                events: allEvents,
+                filteredEvents: List<Event>.from(eventsForMonth),
+                selectedYear: year,
+                selectedMonth: month,
+              ),
+            );
+          }
         },
       );
     }
@@ -137,10 +147,103 @@ class EventsCubit extends Cubit<EventsState> {
         ),
       );
     } else {
-      // If no events are loaded, fetch events for the date
+      // If no events are loaded, first load ALL events to ensure calendar markers work
+      // Then filter by date for the list view
       emit(EventsLoading());
 
-      final result = await getEventsByDateUseCase(GetEventsByDateParams(date));
+      final allEventsResult = await getAllEventsUseCase(const NoParams());
+
+      allEventsResult.fold(
+        (failure) {
+          emit(
+            EventsError(
+              UserFriendlyErrors.getUserFriendlyMessage(
+                failure,
+                context: 'events',
+              ),
+            ),
+          );
+        },
+        (allEvents) {
+          // Filter events for the selected date
+          final eventsForDate = allEvents.where((event) {
+            return event.dateTime.year == date.year &&
+                event.dateTime.month == date.month &&
+                event.dateTime.day == date.day;
+          }).toList();
+
+          if (allEvents.isEmpty) {
+            emit(EventsEmpty());
+          } else {
+            // Keep all events in state.events for calendar markers
+            // Only filter filteredEvents for the list view
+            emit(
+              EventsLoaded(
+                events: allEvents,
+                filteredEvents: List<Event>.from(eventsForDate),
+                selectedDate: date,
+              ),
+            );
+          }
+        },
+      );
+    }
+  }
+
+  Future<void> loadUpcomingEvents() async {
+    emit(EventsLoading());
+
+    // Load all events first to ensure calendar markers work for all events
+    final allEventsResult = await getAllEventsUseCase(const NoParams());
+
+    allEventsResult.fold(
+      (failure) {
+        emit(
+          EventsError(
+            UserFriendlyErrors.getUserFriendlyMessage(
+              failure,
+              context: 'events',
+            ),
+          ),
+        );
+      },
+      (allEvents) {
+        if (allEvents.isEmpty) {
+          emit(EventsEmpty());
+        } else {
+          // Filter for upcoming events from all events
+          final now = DateTime.now();
+          final upcomingEvents = allEvents
+              .where(
+                (e) =>
+                    e.status == EventStatus.upcoming && e.dateTime.isAfter(now),
+              )
+              .toList();
+
+          // Keep all events in state.events for calendar markers
+          // Only filter filteredEvents for the list view
+          emit(
+            EventsLoaded(
+              events: allEvents,
+              filteredEvents: upcomingEvents,
+              filter: EventFilter.upcoming,
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Future<void> applyFilter(EventFilter filter) async {
+    final currentState = state;
+
+    // If filter is upcoming, always load all events first to ensure we have complete data
+    // This ensures we show ALL upcoming events from any date, not just currently loaded ones
+    if (filter == EventFilter.upcoming) {
+      // Always reload all events to ensure we have complete data for filtering
+      emit(EventsLoading());
+
+      final result = await getAllEventsUseCase(const NoParams());
 
       result.fold(
         (failure) {
@@ -153,69 +256,73 @@ class EventsCubit extends Cubit<EventsState> {
             ),
           );
         },
-        (events) {
+        (allEvents) {
+          if (allEvents.isEmpty) {
+            emit(EventsEmpty());
+          } else {
+            // Filter for upcoming events from all events
+            final now = DateTime.now();
+            final filtered = allEvents
+                .where(
+                  (e) =>
+                      e.status == EventStatus.upcoming &&
+                      e.dateTime.isAfter(now),
+                )
+                .toList();
+
+            // Keep all events in state.events for calendar markers
+            // Only filter filteredEvents for the list view
+            emit(
+              EventsLoaded(
+                events: allEvents,
+                filteredEvents: filtered,
+                filter: filter,
+              ),
+            );
+          }
+        },
+      );
+      return;
+    }
+
+    // For "all" filter, ensure we have all events loaded
+    if (filter == EventFilter.all) {
+      if (currentState is! EventsLoaded) {
+        await loadEvents();
+        return;
+      }
+      // If we already have events loaded, reload to ensure we have ALL events
+      // (not just a subset from date/month filtering)
+      emit(EventsLoading());
+
+      final result = await getAllEventsUseCase(const NoParams());
+
+      result.fold(
+        (failure) {
           emit(
-            EventsLoaded(
-              events: List<Event>.from(events),
-              filteredEvents: List<Event>.from(events),
-              selectedDate: date,
+            EventsError(
+              UserFriendlyErrors.getUserFriendlyMessage(
+                failure,
+                context: 'events',
+              ),
             ),
           );
         },
+        (allEvents) {
+          if (allEvents.isEmpty) {
+            emit(EventsEmpty());
+          } else {
+            emit(
+              EventsLoaded(
+                events: allEvents,
+                filteredEvents: allEvents,
+                filter: filter,
+              ),
+            );
+          }
+        },
       );
     }
-  }
-
-  Future<void> loadUpcomingEvents() async {
-    emit(EventsLoading());
-
-    final result = await getUpcomingEventsUseCase(const NoParams());
-
-    result.fold(
-      (failure) {
-        emit(
-          EventsError(
-            UserFriendlyErrors.getUserFriendlyMessage(
-              failure,
-              context: 'events',
-            ),
-          ),
-        );
-      },
-      (events) {
-        if (events.isEmpty) {
-          emit(EventsEmpty());
-        } else {
-          emit(
-            EventsLoaded(
-              events: events,
-              filteredEvents: events,
-              filter: EventFilter.upcoming,
-            ),
-          );
-        }
-      },
-    );
-  }
-
-  void applyFilter(EventFilter filter) {
-    final currentState = state;
-    if (currentState is! EventsLoaded) return;
-
-    List<Event> filtered;
-    if (filter == EventFilter.all) {
-      filtered = currentState.events;
-    } else {
-      // Filter for upcoming events (status is upcoming and dateTime is in the future)
-      final now = DateTime.now();
-      filtered = currentState.events
-          .where(
-            (e) => e.status == EventStatus.upcoming && e.dateTime.isAfter(now),
-          )
-          .toList();
-    }
-
-    emit(currentState.copyWith(filteredEvents: filtered, filter: filter));
   }
 
   Future<void> createEvent(Event event) async {

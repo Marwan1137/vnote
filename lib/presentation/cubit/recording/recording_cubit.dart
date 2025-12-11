@@ -222,11 +222,15 @@ class RecordingCubit extends Cubit<RecordingState> {
           (failure) {
             // If AI processing fails, create a fallback ProcessedNote
             // Still show format selection screen so user can choose format
+            // Generate bullet points from transcription even if API fails
 
+            final bulletPoints = _generateBulletPointsFromTranscription(
+              transcription,
+            );
             final fallbackNote = ProcessedNote(
               title: _extractTitleFromTranscription(transcription),
               content: transcription,
-              bulletPoints: [],
+              bulletPoints: bulletPoints,
               tags: _extractSimpleTags(transcription),
               summary: null,
             );
@@ -316,6 +320,51 @@ class RecordingCubit extends Cubit<RecordingState> {
     }
 
     return cleaned;
+  }
+
+  List<String> _generateBulletPointsFromTranscription(String transcription) {
+    if (transcription.isEmpty) return [];
+
+    final sentences = transcription
+        .split(RegExp(r'[.!?。！？\n]+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty && s.length > 10)
+        .toList();
+
+    if (sentences.isEmpty) {
+      final parts = transcription
+          .split(RegExp(r'[،,;؛\n]+'))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty && s.length > 10)
+          .toList();
+
+      if (parts.length >= 3) {
+        return parts.take(7).toList();
+      } else if (parts.isNotEmpty) {
+        return [transcription];
+      }
+    }
+
+    if (sentences.length >= 3) {
+      return sentences.take(7).toList();
+    } else if (sentences.isNotEmpty) {
+      final words = transcription.split(RegExp(r'\s+'));
+      if (words.length > 20) {
+        final chunkSize = (words.length / 3).ceil();
+        final points = <String>[];
+        for (int i = 0; i < words.length; i += chunkSize) {
+          final chunk = words.skip(i).take(chunkSize).join(' ');
+          if (chunk.trim().isNotEmpty) {
+            points.add(chunk.trim());
+          }
+          if (points.length >= 5) break;
+        }
+        return points;
+      }
+      return sentences;
+    }
+
+    return [transcription];
   }
 
   List<String> _extractSimpleTags(String text) {

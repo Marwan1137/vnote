@@ -10,11 +10,12 @@ import '../datasources_contracts/llm_datasource.dart';
 class LLMDataSourceImpl implements LLMDataSource {
   late final GenerativeModel _model;
   static const List<String> _fallbackModels = [
+    'gemini-3-pro',
+    'gemini-2.5-pro',
     'gemini-2.5-flash',
     'gemini-2.0-flash',
     'gemini-2.5-flash-lite',
     'gemini-2.0-flash-lite',
-    'gemini-2.5-pro',
   ];
 
   LLMDataSourceImpl() {
@@ -71,7 +72,8 @@ class LLMDataSourceImpl implements LLMDataSource {
         throw LLMProcessingException('Gemini API returned empty response');
       }
 
-      return _parseResponse(generatedText, transcription);
+      final parsed = _parseResponse(generatedText, transcription);
+      return parsed;
     } on GenerativeAIException catch (e) {
       throw LLMProcessingException('Gemini API error: ${e.message}');
     } catch (e) {
